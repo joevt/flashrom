@@ -120,7 +120,7 @@
 #endif
 
 #if defined(__MACH__) && defined(__APPLE__)
-#include <DirectHW/DirectHW.h>
+#include "DirectHW/DirectHW.h"
 
 #define IO_PORT_PERMISSION USE_IOPL
 #define IO_PORT_FUNCTION USE_LIBC_TARGET_LAST

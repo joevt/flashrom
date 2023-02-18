@@ -304,7 +304,7 @@ void msr_cleanup(void)
  * rdmsr() and wrmsr() are provided by DirectHW and need neither setup nor cleanup.
  */
 #define msr_t directhw_msr_t
-#include <DirectHW/DirectHW.h>
+#include "DirectHW/DirectHW.h"
 #undef msr_t
 
 msr_t msr_read(int addr)

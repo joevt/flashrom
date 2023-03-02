@@ -362,7 +362,8 @@ int probe_spi_big_spansion(struct flashctx *flash)
 		return 0;
 
 	msg_gdbg("Read id bytes: ");
-	for (size_t i = 0; i < sizeof(dev_id); i++)
+	size_t i;
+	for (i = 0; i < sizeof(dev_id); i++)
 		msg_gdbg(" 0x%02x", dev_id[i]);
 	msg_gdbg(".\n");
 

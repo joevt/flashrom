@@ -230,7 +230,8 @@ static int wp_cli(
 		size_t count = flashrom_wp_ranges_get_count(list);
 
 		msg_ginfo("Available protection ranges:\n");
-		for (size_t i = 0; i < count; i++) {
+		size_t i;
+		for (i = 0; i < count; i++) {
 			size_t start, len;
 
 			flashrom_wp_ranges_get_range(&start, &len, list, i);

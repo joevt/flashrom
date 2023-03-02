@@ -140,7 +140,8 @@ static int dirtyjtag_djtag1_spi_send_command(struct dirtyjtag_spi_data *context,
 	}
 
 	memcpy(rxtx_buffer, writearr, writecnt);
-	for (size_t i = 0; i < num_xfer; i++) {
+	size_t i;
+	for (i = 0; i < num_xfer; i++) {
 		const size_t xfer_offset = i * max_xfer_size;
 		size_t txn_size = max_xfer_size;
 		if (i == num_xfer-1 && len % max_xfer_size != 0)

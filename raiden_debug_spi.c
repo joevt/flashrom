@@ -864,7 +864,8 @@ static int send_command_v1(const struct flashctx *flash,
 		return SPI_INVALID_LENGTH;
 	}
 
-	for (unsigned int write_attempt = 0; write_attempt < WRITE_RETRY_ATTEMPTS;
+	unsigned int write_attempt;
+	for (write_attempt = 0; write_attempt < WRITE_RETRY_ATTEMPTS;
 	         write_attempt++) {
 
 
@@ -896,7 +897,8 @@ static int send_command_v1(const struct flashctx *flash,
 			continue;
 		}
 
-		for (unsigned int read_attempt = 0; read_attempt < READ_RETRY_ATTEMPTS;
+		unsigned int read_attempt;
+		for (read_attempt = 0; read_attempt < READ_RETRY_ATTEMPTS;
 				read_attempt++) {
 
 			status = read_response_v1(ctx_data, &write_ctx, &read_ctx);

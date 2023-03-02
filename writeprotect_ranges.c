@@ -26,7 +26,8 @@ static void decode_range_generic(size_t *start, size_t *len, const struct wp_bit
 	size_t bp = 0;
 	size_t bp_max = 0;
 
-	for (size_t i = 0; i < bits->bp_bit_count; i++) {
+	size_t i;
+	for (i = 0; i < bits->bp_bit_count; i++) {
 		bp |= bits->bp[i] << i;
 		bp_max |= 1 << i;
 	}

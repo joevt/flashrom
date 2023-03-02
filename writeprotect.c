@@ -170,7 +170,8 @@ static void get_wp_bits_reg_values(
 	memset(bit_masks, 0, sizeof(uint8_t) * MAX_REGISTERS);
 	memset(write_masks, 0, sizeof(uint8_t) * MAX_REGISTERS);
 
-	for (size_t i = 0; i < bits.bp_bit_count; i++)
+	size_t i;
+	for (i = 0; i < bits.bp_bit_count; i++)
 		set_reg_bit(reg_values, bit_masks, write_masks, reg_bits->bp[i], bits.bp[i]);
 
 	set_reg_bit(reg_values, bit_masks, write_masks, reg_bits->tb,  bits.tb);
@@ -191,7 +192,8 @@ static enum flashrom_wp_result write_wp_bits(struct flashctx *flash, struct wp_b
 	get_wp_bits_reg_values(reg_values, bit_masks, write_masks, &flash->chip->reg_bits, bits);
 
 	/* Write each register whose value was updated */
-	for (enum flash_reg reg = STATUS1; reg < MAX_REGISTERS; reg++) {
+	enum flash_reg reg;
+	for (reg = STATUS1; reg < MAX_REGISTERS; reg++) {
 		if (!write_masks[reg])
 			continue;
 
@@ -213,7 +215,7 @@ static enum flashrom_wp_result write_wp_bits(struct flashctx *flash, struct wp_b
 
 	enum flashrom_wp_result ret = FLASHROM_WP_OK;
 	/* Verify each register even if write to it was skipped */
-	for (enum flash_reg reg = STATUS1; reg < MAX_REGISTERS; reg++) {
+	for (reg = STATUS1; reg < MAX_REGISTERS; reg++) {
 		if (!bit_masks[reg])
 			continue;
 
@@ -296,7 +298,8 @@ static int compare_ranges(const void *aa, const void *bb)
 	if (ord == 0)
 		ord = a->bits.tb  - b->bits.tb;
 
-	for (int i = a->bits.bp_bit_count - 1; i >= 0; i--) {
+	int i;
+	for (i = a->bits.bp_bit_count - 1; i >= 0; i--) {
 		if (ord == 0)
 			ord = a->bits.bp[i] - b->bits.bp[i];
 	}
@@ -338,7 +341,8 @@ static enum flashrom_wp_result get_ranges_and_wp_bits(struct flashctx *flash, st
 	uint8_t *range_bits[ARRAY_SIZE(bits.bp) + 1 /* TB */ + 1 /* SEC */ + 1 /* CMP */];
 	size_t bit_count = 0;
 
-	for (size_t i = 0; i < ARRAY_SIZE(bits.bp); i++) {
+	size_t i;
+	for (i = 0; i < ARRAY_SIZE(bits.bp); i++) {
 		if (can_write_bit(reg_bits->bp[i]))
 			range_bits[bit_count++] = &bits.bp[i];
 	}
@@ -358,13 +362,14 @@ static enum flashrom_wp_result get_ranges_and_wp_bits(struct flashctx *flash, st
 
 	/* TODO: take WPS bit into account. */
 
-	for (size_t range_index = 0; range_index < *count; range_index++) {
+	size_t range_index;
+	for (range_index = 0; range_index < *count; range_index++) {
 		/*
 		 * Extract bits from the range index and assign them to members
 		 * of the wp_bits structure. The loop bounds ensure that all
 		 * bit combinations will be enumerated.
 		 */
-		for (size_t i = 0; i < bit_count; i++)
+		for (i = 0; i < bit_count; i++)
 			*range_bits[i] = (range_index >> i) & 1;
 
 		struct wp_range_and_bits *output = &(*ranges)[range_index];
@@ -384,7 +389,7 @@ static enum flashrom_wp_result get_ranges_and_wp_bits(struct flashctx *flash, st
 			msg_gspew("SEC=%u ", bits.sec);
 		if (bits.tb_bit_present)
 			msg_gspew("TB=%u ", bits.tb);
-		for (size_t i = 0; i < bits.bp_bit_count; i++) {
+		for (i = 0; i < bits.bp_bit_count; i++) {
 			size_t j = bits.bp_bit_count - i - 1;
 			msg_gspew("BP%zu=%u ", j, bits.bp[j]);
 		}
@@ -399,7 +404,7 @@ static enum flashrom_wp_result get_ranges_and_wp_bits(struct flashctx *flash, st
 	size_t output_index = 0;
 	struct wp_range *last_range = NULL;
 
-	for (size_t i = 0; i < *count; i++) {
+	for (i = 0; i < *count; i++) {
 		bool different_to_last =
 			(last_range == NULL) ||
 			((*ranges)[i].range.start != last_range->start) ||
@@ -439,7 +444,8 @@ static int set_wp_range(struct wp_bits *bits, struct flashctx *flash, const stru
 
 	/* Search for matching range */
 	ret = FLASHROM_WP_ERR_RANGE_UNSUPPORTED;
-	for (size_t i = 0; i < count; i++) {
+	size_t i;
+	for (i = 0; i < count; i++) {
 
 		if (ranges_equal(ranges[i].range, range)) {
 			*bits = ranges[i].bits;
@@ -590,7 +596,8 @@ enum flashrom_wp_result wp_get_available_ranges(struct flashrom_wp_ranges **list
 	(*list)->count = count;
 	(*list)->ranges = ranges;
 
-	for (size_t i = 0; i < count; i++)
+	size_t i;
+	for (i = 0; i < count; i++)
 		ranges[i] = range_pairs[i].range;
 
 out:

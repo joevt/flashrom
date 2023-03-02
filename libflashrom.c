@@ -99,7 +99,8 @@ struct flashrom_flashchip_info *flashrom_supported_flash_chips(void)
 		return NULL;
 	}
 
-	for (unsigned int i = 0; i < flashchips_size; ++i) {
+	unsigned int i;
+	for (i = 0; i < flashchips_size; ++i) {
 		supported_flashchips[i].vendor = flashchips[i].vendor;
 		supported_flashchips[i].name = flashchips[i].name;
 		supported_flashchips[i].tested.erase =

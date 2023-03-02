@@ -380,7 +380,8 @@ void get_flash_region(const struct flashctx *flash, int addr, struct flash_regio
 int check_for_unwritable_regions(const struct flashctx *flash, unsigned int start, unsigned int len)
 {
 	struct flash_region region;
-	for (unsigned int addr = start; addr < start + len; addr = region.end) {
+	unsigned int addr;
+	for (addr = start; addr < start + len; addr = region.end) {
 		get_flash_region(flash, addr, &region);
 
 		if (region.write_prot) {
@@ -469,7 +470,8 @@ int check_block_eraser(const struct flashctx *flash, int k, int log)
 
 	if (flash->mst->buses_supported & BUS_SPI) {
 		const uint8_t *opcode = spi_get_opcode_from_erasefn(eraser.block_erase);
-		for (int i = 0; opcode[i]; i++) {
+		int i;
+		for (i = 0; opcode[i]; i++) {
 			if (!flash->mst->spi.probe_opcode(flash, opcode[i])) {
 				if (log)
 					msg_cdbg("block erase function and layout found "
@@ -571,7 +573,8 @@ static read_func_t *lookup_read_func_ptr(const struct flashchip *chip)
 int read_flash(struct flashctx *flash, uint8_t *buf, unsigned int start, unsigned int len)
 {
 	unsigned int read_len;
-	for (unsigned int addr = start; addr < start + len; addr += read_len) {
+	unsigned int addr;
+	for (addr = start; addr < start + len; addr += read_len) {
 		struct flash_region region;
 		get_flash_region(flash, addr, &region);
 
@@ -641,7 +644,8 @@ int verify_range(struct flashctx *flash, const uint8_t *cmpbuf, unsigned int sta
 	msg_gdbg("%#06x..%#06x ", start, start + len - 1);
 
 	unsigned int read_len;
-	for (size_t addr = start; addr < start + len; addr += read_len) {
+	size_t addr;
+	for (addr = start; addr < start + len; addr += read_len) {
 		struct flash_region region;
 		get_flash_region(flash, addr, &region);
 		read_len = min(start + len, region.end) - addr;
@@ -1008,7 +1012,8 @@ int write_flash(struct flashctx *flash, const uint8_t *buf,
 	}
 
 	unsigned int write_len;
-	for (unsigned int addr = start; addr < start + len; addr += write_len) {
+	unsigned int addr;
+	for (addr = start; addr < start + len; addr += write_len) {
 		struct flash_region region;
 		get_flash_region(flash, addr, &region);
 
@@ -1471,7 +1476,8 @@ static int erase_block(struct flashctx *const flashctx,
 	}
 
 	unsigned int len;
-	for (unsigned int addr = info->erase_start; addr < info->erase_start + erase_len; addr += len) {
+	unsigned int addr;
+	for (addr = info->erase_start; addr < info->erase_start + erase_len; addr += len) {
 		struct flash_region region;
 		get_flash_region(flashctx, addr, &region);
 

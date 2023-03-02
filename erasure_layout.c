@@ -29,7 +29,8 @@ static size_t calculate_block_count(const struct flashchip *chip, size_t eraser_
 	size_t block_count = 0;
 
 	chipoff_t addr = 0;
-	for (size_t i = 0; addr < chip->total_size * 1024; i++) {
+	size_t i;
+	for (i = 0; addr < chip->total_size * 1024; i++) {
 		const struct eraseblock *block = &chip->block_erasers[eraser_idx].eraseblocks[i];
 		block_count += block->count;
 		addr += block->size * block->count;
@@ -71,7 +72,8 @@ void free_erase_layout(struct erase_layout *layout, unsigned int erasefn_count)
 {
 	if (!layout)
 		return;
-	for (size_t i = 0; i < erasefn_count; i++) {
+	size_t i;
+	for (i = 0; i < erasefn_count; i++) {
 		free(layout[i].layout_list);
 	}
 	free(layout);
@@ -106,7 +108,8 @@ int create_erase_layout(struct flashctx *const flashctx, struct erase_layout **e
 	}
 
 	size_t layout_idx = 0;
-	for (size_t eraser_idx = 0; eraser_idx < NUM_ERASEFUNCTIONS; eraser_idx++) {
+	size_t eraser_idx;
+	for (eraser_idx = 0; eraser_idx < NUM_ERASEFUNCTIONS; eraser_idx++) {
 		if (check_block_eraser(flashctx, eraser_idx, 0))
 			continue;
 
@@ -126,10 +129,12 @@ int create_erase_layout(struct flashctx *const flashctx, struct erase_layout **e
 		size_t block_num = 0;
 		chipoff_t start_addr = 0;
 
-		for (int i = 0; block_num < block_count;  i++) {
+		int i;
+		for (i = 0; block_num < block_count;  i++) {
 			const struct eraseblock *block = &chip->block_erasers[eraser_idx].eraseblocks[i];
 
-			for (size_t num = 0; num < block->count; num++) {
+			size_t num;
+			for (num = 0; num < block->count; num++) {
 				chipoff_t end_addr = start_addr + block->size - 1;
 				init_eraseblock(layout, layout_idx, block_num,
 						start_addr, end_addr, &sub_block_index);
@@ -162,8 +167,10 @@ static void align_region(const struct erase_layout *layout, struct flashctx *con
 {
 	chipoff_t start_diff = UINT_MAX, end_diff = UINT_MAX;
 	const size_t erasefn_count = count_usable_erasers(flashctx);
-	for (size_t i = 0; i < erasefn_count; i++) {
-		for (size_t j = 0; j < layout[i].block_count; j++) {
+	size_t i;
+	for (i = 0; i < erasefn_count; i++) {
+		size_t j;
+		for (j = 0; j < layout[i].block_count; j++) {
 			const struct eraseblock_data *ll = &layout[i].layout_list[j];
 			if (ll->start_addr <= *region_start)
 				start_diff = (*region_start - ll->start_addr) > start_diff ?
@@ -215,7 +222,8 @@ static void select_erase_functions(struct flashctx *flashctx, const struct erase
 		const int sub_block_start = ll->first_sub_block_index;
 		const int sub_block_end = ll->last_sub_block_index;
 
-		for (int j = sub_block_start; j <= sub_block_end; j++) {
+		int j;
+		for (j = sub_block_start; j <= sub_block_end; j++) {
 			select_erase_functions(flashctx, layout, findex - 1, j, curcontents, newcontents,
 						rstart, rend);
 			if (layout[findex - 1].layout_list[j].selected)
@@ -225,7 +233,8 @@ static void select_erase_functions(struct flashctx *flashctx, const struct erase
 		const int total_blocks = sub_block_end - sub_block_start + 1;
 		if (count && count > total_blocks/2) {
 			if (ll->start_addr >= rstart && ll->end_addr <= rend) {
-				for (int j = sub_block_start; j <= sub_block_end; j++)
+				int j;
+				for (j = sub_block_start; j <= sub_block_end; j++)
 					layout[findex - 1].layout_list[j].selected = false;
 				ll->selected = true;
 			}
@@ -290,7 +299,8 @@ int erase_write(struct flashctx *const flashctx, chipoff_t region_start, chipoff
 	}
 
 	for (i = 0; i < erasefn_count; i++) {
-		for (size_t j = 0; j < erase_layout[i].block_count; j++) {
+		size_t j;
+		for (j = 0; j < erase_layout[i].block_count; j++) {
 			if (!erase_layout[i].layout_list[j].selected)	continue;
 
 			// erase
@@ -306,7 +316,8 @@ int erase_write(struct flashctx *const flashctx, chipoff_t region_start, chipoff
 			}
 
 			unsigned int len;
-			for (unsigned int addr = start_addr; addr < start_addr + block_len; addr += len) {
+			unsigned int addr;
+			for (addr = start_addr; addr < start_addr + block_len; addr += len) {
 				struct flash_region region;
 				get_flash_region(flashctx, addr, &region);
 

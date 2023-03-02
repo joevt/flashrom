@@ -526,7 +526,8 @@ static int ft2232_spi_init(const struct programmer_cfg *cfg)
 	free(arg);
 
 	/* gpiolX */
-	for (int pin = 0; pin < 4; pin++) {
+	int pin;
+	for (pin = 0; pin < 4; pin++) {
 		char gpiol_param[7];
 		snprintf(gpiol_param, sizeof(gpiol_param), "gpiol%d", pin);
 		arg = extract_programmer_param_str(cfg, gpiol_param);

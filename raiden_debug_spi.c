@@ -571,7 +571,7 @@ struct usb_spi_packet_ctx {
 		uint8_t bytes[USB_MAX_PACKET_SIZE];
 		union usb_spi_packet_v1 packet_v1;
 		union usb_spi_packet_v2 packet_v2;
-	};
+	} p;
 	/*
 	 * By storing the number of bytes in the header and knowing that the
 	 * USB data packets are all 64B long, we are able to use the header
@@ -649,7 +649,7 @@ static int read_usb_packet(struct usb_spi_receive_ctx *dst,
 {
 	size_t max_read_length = dst->receive_size - dst->receive_index;
 	size_t bytes_in_buffer = src->packet_size - src->header_size;
-	const uint8_t *packet_buffer = src->bytes + src->header_size;
+	const uint8_t *packet_buffer = src->p.bytes + src->header_size;
 
 	if (bytes_in_buffer > max_read_length) {
 		/*
@@ -683,7 +683,7 @@ static void fill_usb_packet(struct usb_spi_packet_ctx *dst,
 {
 	size_t transmit_size = src->transmit_size - src->transmit_index;
 	size_t max_buffer_size = USB_MAX_PACKET_SIZE - dst->header_size;
-	uint8_t *packet_buffer = dst->bytes + dst->header_size;
+	uint8_t *packet_buffer = dst->p.bytes + dst->header_size;
 
 	if (transmit_size > max_buffer_size)
 		transmit_size = max_buffer_size;
@@ -708,7 +708,7 @@ static int receive_packet(const struct raiden_debug_spi_data *ctx_data,
 	int received;
 	int status = LIBUSB(libusb_bulk_transfer(ctx_data->dev->handle,
 				ctx_data->in_ep,
-				packet->bytes,
+				packet->p.bytes,
 				USB_MAX_PACKET_SIZE,
 				&received,
 				TRANSFER_TIMEOUT_MS));
@@ -736,7 +736,7 @@ static int transmit_packet(const struct raiden_debug_spi_data *ctx_data,
 	int transferred;
 	int status = LIBUSB(libusb_bulk_transfer(ctx_data->dev->handle,
 				ctx_data->out_ep,
-				packet->bytes,
+				packet->p.bytes,
 				packet->packet_size,
 				&transferred,
 				TRANSFER_TIMEOUT_MS));
@@ -768,11 +768,10 @@ static int write_command_v1(const struct raiden_debug_spi_data *ctx_data,
 		struct usb_spi_transmit_ctx *write,
 		struct usb_spi_receive_ctx *read)
 {
-	struct usb_spi_packet_ctx command = {
-		.header_size = offsetof(struct usb_spi_command_v1, data),
-		.packet_v1.command.write_count = write->transmit_size,
-		.packet_v1.command.read_count = read->receive_size
-	};
+	struct usb_spi_packet_ctx command;
+	command.header_size = offsetof(struct usb_spi_command_v1, data);
+	command.p.packet_v1.command.write_count = write->transmit_size;
+	command.p.packet_v1.command.read_count = read->receive_size;
 
 	/* Reset the write context to the start. */
 	write->transmit_index = 0;
@@ -807,8 +806,8 @@ static int read_response_v1(const struct raiden_debug_spi_data *ctx_data,
 		/* Return the transfer error since the status_code is unreliable */
 		return status;
 	}
-	if (response.packet_v1.response.status_code) {
-		return response.packet_v1.response.status_code;
+	if (response.p.packet_v1.response.status_code) {
+		return response.p.packet_v1.response.status_code;
 	}
 	response.header_size = offsetof(struct usb_spi_response_v1, data);
 
@@ -953,7 +952,7 @@ static int get_spi_config_v2(struct raiden_debug_spi_data *ctx_data)
 	struct usb_spi_packet_ctx cmd_get_config = {
 		.header_size = PACKET_HEADER_SIZE,
 		.packet_size = PACKET_HEADER_SIZE,
-		.packet_v2.packet_id = USB_SPI_PKT_ID_CMD_GET_USB_SPI_CONFIG
+		.p.packet_v2.packet_id = USB_SPI_PKT_ID_CMD_GET_USB_SPI_CONFIG
 	};
 
 	for (config_attempt = 0; config_attempt < GET_CONFIG_RETRY_ATTEMPTS; config_attempt++) {
@@ -982,16 +981,16 @@ static int get_spi_config_v2(struct raiden_debug_spi_data *ctx_data)
 		 * Perform validation on the packet received to verify it is a valid
 		 * configuration. If it is, we are ready to perform transfers.
 		 */
-		if ((rsp_config.packet_v2.packet_id ==
+		if ((rsp_config.p.packet_v2.packet_id ==
 				USB_SPI_PKT_ID_RSP_USB_SPI_CONFIG) ||
 				(rsp_config.packet_size ==
 				sizeof(struct usb_spi_response_configuration_v2))) {
 
 			/* Set the parameters from the configuration. */
 			ctx_data->max_spi_write_count =
-				rsp_config.packet_v2.rsp_config.max_write_count;
+				rsp_config.p.packet_v2.rsp_config.max_write_count;
 			ctx_data->max_spi_read_count =
-				rsp_config.packet_v2.rsp_config.max_read_count;
+				rsp_config.p.packet_v2.rsp_config.max_read_count;
 			return status;
 		}
 
@@ -1002,9 +1001,9 @@ static int get_spi_config_v2(struct raiden_debug_spi_data *ctx_data)
 		const size_t err_packet_size = sizeof(struct usb_spi_response_v2) -
 			USB_SPI_PAYLOAD_SIZE_V2_RESPONSE;
 		if (rsp_config.packet_size == err_packet_size &&
-				rsp_config.packet_v2.rsp_start.status_code !=
+				rsp_config.p.packet_v2.rsp_start.status_code !=
 				USB_SPI_SUCCESS) {
-			status = rsp_config.packet_v2.rsp_start.status_code;
+			status = rsp_config.p.packet_v2.rsp_start.status_code;
 			if (status == USB_SPI_DISABLED) {
 				msg_perr("Raiden: Target SPI bridge is disabled (is WP enabled?)\n");
 				return status;
@@ -1016,7 +1015,7 @@ static int get_spi_config_v2(struct raiden_debug_spi_data *ctx_data)
 		         "    packet id      = %u\n"
 		         "    packet size    = %zu\n",
 		         config_attempt + 1,
-		         rsp_config.packet_v2.packet_id,
+		         rsp_config.p.packet_v2.packet_id,
 		         rsp_config.packet_size);
 		default_delay(RETRY_INTERVAL_US);
 	}
@@ -1036,7 +1035,7 @@ static int restart_response_v2(const struct raiden_debug_spi_data *ctx_data)
 	struct usb_spi_packet_ctx restart_response = {
 		.header_size = PACKET_HEADER_SIZE,
 		.packet_size = PACKET_HEADER_SIZE,
-		.packet_v2.packet_id = USB_SPI_PKT_ID_CMD_RESTART_RESPONSE
+		.p.packet_v2.packet_id = USB_SPI_PKT_ID_CMD_RESTART_RESPONSE
 	};
 
 	return transmit_packet(ctx_data, &restart_response);
@@ -1058,12 +1057,11 @@ static int write_command_v2(const struct raiden_debug_spi_data *ctx_data,
 	int status;
 	struct usb_spi_packet_ctx continue_packet;
 
-	struct usb_spi_packet_ctx start_usb_spi_packet = {
-		.header_size = offsetof(struct usb_spi_command_v2, data),
-		.packet_v2.cmd_start.packet_id = USB_SPI_PKT_ID_CMD_TRANSFER_START,
-		.packet_v2.cmd_start.write_count = write->transmit_size,
-		.packet_v2.cmd_start.read_count = read->receive_size
-	};
+	struct usb_spi_packet_ctx start_usb_spi_packet;
+	start_usb_spi_packet.header_size = offsetof(struct usb_spi_command_v2, data);
+	start_usb_spi_packet.p.packet_v2.cmd_start.packet_id = USB_SPI_PKT_ID_CMD_TRANSFER_START;
+	start_usb_spi_packet.p.packet_v2.cmd_start.write_count = write->transmit_size;
+	start_usb_spi_packet.p.packet_v2.cmd_start.read_count = read->receive_size;
 
 	/* Reset the write context to the start. */
 	write->transmit_index = 0;
@@ -1077,9 +1075,9 @@ static int write_command_v2(const struct raiden_debug_spi_data *ctx_data,
 	while (write->transmit_index < write->transmit_size) {
 		/* Transmit any continue packets. */
 		continue_packet.header_size = offsetof(struct usb_spi_continue_v2, data);
-		continue_packet.packet_v2.cmd_continue.packet_id =
+		continue_packet.p.packet_v2.cmd_continue.packet_id =
 				USB_SPI_PKT_ID_CMD_TRANSFER_CONTINUE;
-		continue_packet.packet_v2.cmd_continue.data_index =
+		continue_packet.p.packet_v2.cmd_continue.data_index =
 				write->transmit_index;
 
 		fill_usb_packet(&continue_packet, write);
@@ -1119,35 +1117,35 @@ static int read_response_v2(const struct raiden_debug_spi_data *ctx_data,
 			/* Return the transfer error. */
 			return status;
 		}
-		if (response.packet_v2.packet_id == USB_SPI_PKT_ID_RSP_TRANSFER_START) {
+		if (response.p.packet_v2.packet_id == USB_SPI_PKT_ID_RSP_TRANSFER_START) {
 			/*
 			 * The host should only see this packet if an error occurs
 			 * on the device or if it's the first response packet.
 			 */
-			if (response.packet_v2.rsp_start.status_code) {
-				return response.packet_v2.rsp_start.status_code;
+			if (response.p.packet_v2.rsp_start.status_code) {
+				return response.p.packet_v2.rsp_start.status_code;
 			}
 			if (read->receive_index) {
 				msg_perr("Raiden: Unexpected start packet id = %u\n",
-					 response.packet_v2.rsp_start.packet_id);
+					 response.p.packet_v2.rsp_start.packet_id);
 				return USB_SPI_HOST_RX_UNEXPECTED_PACKET;
 			}
 			response.header_size = offsetof(struct usb_spi_response_v2, data);
-		} else if (response.packet_v2.packet_id ==
+		} else if (response.p.packet_v2.packet_id ==
 				USB_SPI_PKT_ID_RSP_TRANSFER_CONTINUE) {
 
 			/* We validate that no packets were missed. */
 			if (read->receive_index !=
-					response.packet_v2.rsp_continue.data_index) {
+					response.p.packet_v2.rsp_continue.data_index) {
 				msg_perr("Raiden: Bad Index = %u Expected = %zu\n",
-					 response.packet_v2.rsp_continue.data_index,
+					 response.p.packet_v2.rsp_continue.data_index,
 					 read->receive_index);
 				return USB_SPI_HOST_RX_BAD_DATA_INDEX;
 			}
 			response.header_size = offsetof(struct usb_spi_continue_v2, data);
 		} else {
 			msg_perr("Raiden: Unexpected packet id = %u\n",
-				 response.packet_v2.packet_id);
+				 response.p.packet_v2.packet_id);
 			return USB_SPI_HOST_RX_UNEXPECTED_PACKET;
 		}
 		status = read_usb_packet(read, &response);

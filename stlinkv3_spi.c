@@ -119,7 +119,7 @@ static const struct dev_entry devs_stlinkv3_spi[] = {
 	{0x0483, 0x374F, OK, "STMicroelectronics", "STLINK-V3S"},
 	{0x0483, 0x3753, OK, "STMicroelectronics", "STLINK-V3 dual VCP"},
 	{0x0483, 0x3754, NT, "STMicroelectronics", "STLINK-V3 no MSD"},
-	{0}
+	{0,0,0,0,0}
 };
 
 struct stlinkv3_spi_data {

@@ -55,7 +55,7 @@
 
 static const struct dev_entry devs_developerbox_spi[] = {
 	{0x10c4, 0xea60, OK, "Silicon Labs", "CP2102N USB to UART Bridge Controller"},
-	{0},
+	{0,0,0,0,0},
 };
 
 struct devbox_spi_data {

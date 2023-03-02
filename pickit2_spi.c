@@ -47,7 +47,7 @@
 static const struct dev_entry devs_pickit2_spi[] = {
 	{0x04D8, 0x0033, OK, "Microchip", "PICkit 2"},
 
-	{0}
+	{0,0,0,0,0}
 };
 
 struct pickit2_spi_data {

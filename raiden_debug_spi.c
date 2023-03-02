@@ -356,7 +356,7 @@
  * device with a specific vid:pid.
  */
 static const struct dev_entry devs_raiden[] = {
-	{0},
+	{0,0,0,0,0},
 };
 
 #define GOOGLE_VID                  (0x18D1)

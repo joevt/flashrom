@@ -219,7 +219,8 @@ int flashrom_flash_probe(struct flashrom_flashctx **const flashctx,
 			 const char *const chip_name)
 {
 	int i, ret = 2;
-	struct flashrom_flashctx second_flashctx = { 0, };
+	struct flashrom_flashctx second_flashctx;
+	bzero(&second_flashctx, sizeof(second_flashctx));
 
 	*flashctx = malloc(sizeof(**flashctx));
 	if (!*flashctx)

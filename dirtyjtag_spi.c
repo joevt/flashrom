@@ -45,7 +45,7 @@ struct dirtyjtag_spi_data {
 
 static const struct dev_entry devs_dirtyjtag_spi[] = {
 	{ 0x1209, 0xc0ca, OK, "DirtyJTAG", "JTAG probe" },
-	{ 0 },
+	{ 0,0,0,0,0 },
 };
 
 static const char dirtyjtag_write_endpoint = 0x01;

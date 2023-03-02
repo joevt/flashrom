@@ -105,7 +105,7 @@ static const struct dev_entry nics_intel_spi[] = {
 	{PCI_VENDOR_ID_INTEL, 0x1538, NT, "Intel", "I210 Gigabit Network Connection SGMII"},
 	{PCI_VENDOR_ID_INTEL, 0x1539, NT, "Intel", "I211 Gigabit Network Connection"},
 
-	{0},
+	{0,0,0,0,0},
 };
 
 static void nicintel_request_spibus(void *spi_data)

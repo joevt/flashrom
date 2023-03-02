@@ -143,7 +143,8 @@ bool default_spi_probe_opcode(const struct flashctx *flash, uint8_t opcode)
 
 int register_spi_master(const struct spi_master *mst, void *data)
 {
-	struct registered_master rmst = {0};
+	struct registered_master rmst;
+	bzero(&rmst, sizeof(rmst));
 
 	if (mst->shutdown) {
 		if (register_shutdown(mst->shutdown, data)) {

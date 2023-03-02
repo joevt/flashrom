@@ -39,7 +39,7 @@ struct drkaiser_data {
 static const struct dev_entry drkaiser_pcidev[] = {
 	{0x1803, 0x5057, OK, "Dr. Kaiser", "PC-Waechter (Actel FPGA)"},
 
-	{0},
+	{0,0,0,0,0},
 };
 
 static void drkaiser_chip_writeb(const struct flashctx *flash, uint8_t val,

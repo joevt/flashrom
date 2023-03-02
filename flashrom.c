@@ -1532,7 +1532,8 @@ _free_ret:
  */
 static int erase_by_layout_legacy(struct flashctx *const flashctx)
 {
-	struct walk_info info = { 0 };
+	struct walk_info info;
+	bzero(&info, sizeof(info));
 	bool all_skipped = true;
 	return walk_by_layout(flashctx, &info, &erase_block, &all_skipped);
 }

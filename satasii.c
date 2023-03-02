@@ -37,7 +37,7 @@ static const struct dev_entry satas_sii[] = {
 	{0x1095, 0x3132, OK, "Silicon Image", "SiI 3132 SATA Raid II Ctrl"},
 	{0x1095, 0x3512, OK, "Silicon Image", "SiI 3512 [SATALink/SATARaid] SATA Ctrl"},
 
-	{0},
+	{0,0,0,0,0},
 };
 
 static uint32_t satasii_wait_done(const uint8_t *bar)

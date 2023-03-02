@@ -20522,7 +20522,7 @@ const struct flashchip flashchips[] = {
 		.write		= 0, /* set by probing function */
 		.read		= SPI_CHIP_READ,
 		/* FIXME: some vendor extensions define this */
-		.voltage	= {0},
+		.voltage	= {0, 0},
 	},
 
 	{
@@ -20708,7 +20708,9 @@ const struct flashchip flashchips[] = {
 		.write		= 0,
 	},
 
-	{0}
+	{
+		.vendor		= 0,
+	}
 };
 
 const unsigned int flashchips_size = ARRAY_SIZE(flashchips);

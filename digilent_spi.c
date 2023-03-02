@@ -55,7 +55,7 @@ struct digilent_spi_data {
 
 static const struct dev_entry devs_digilent_spi[] = {
 	{ DIGILENT_VID, DIGILENT_JTAG_PID, OK, "Digilent", "Development board JTAG" },
-	{ 0 },
+	{ 0,0,0,0,0 },
 };
 
 /* Control endpoint commands. */

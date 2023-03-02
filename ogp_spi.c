@@ -49,7 +49,7 @@ struct ogp_spi_data {
 static const struct dev_entry ogp_spi[] = {
 	{PCI_VENDOR_ID_OGP, 0x0000, OK, "Open Graphics Project", "Development Board OGD1"},
 
-	{0},
+	{0,0,0,0,0},
 };
 
 static void ogp_request_spibus(void *spi_data)

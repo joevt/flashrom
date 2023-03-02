@@ -79,7 +79,7 @@ static const struct dev_entry devs_ft2232spi[] = {
 	{OLIMEX_VID, OLIMEX_ARM_OCD_H_PID, OK, "Olimex", "ARM-USB-OCD-H"},
 	{OLIMEX_VID, OLIMEX_ARM_TINY_H_PID, OK, "Olimex", "ARM-USB-TINY-H"},
 
-	{0},
+	{0,0,0,0,0},
 };
 
 #define FTDI_HW_BUFFER_SIZE 4096 /* in bytes */

@@ -86,7 +86,7 @@ static struct libusb_device_handle *handle = NULL;
 static const struct dev_entry devs_ch341a_spi[] = {
 	{0x1A86, 0x5512, OK, "Winchiphead (WCH)", "CH341A"},
 
-	{0},
+	{0,0,0,0,0},
 };
 
 enum trans_state {TRANS_ACTIVE = -2, TRANS_ERR = -1, TRANS_IDLE = 0};

@@ -569,7 +569,8 @@ int main(int argc, char *argv[])
 {
 	const struct flashchip *chip = NULL;
 	/* Probe for up to eight flash chips. */
-	struct flashctx flashes[8] = {{0}};
+	struct flashctx flashes[8];
+	bzero(flashes, sizeof(flashes));
 	struct flashctx *fill_flash;
 	const char *name;
 	int namelen, opt, i, j;

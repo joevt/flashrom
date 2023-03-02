@@ -19,6 +19,7 @@
  * GNU General Public License for more details.
  */
 
+#include <strings.h>
 #include "flash.h"
 #include "programmer.h"
 
@@ -130,7 +131,8 @@ int register_par_master(const struct par_master *mst,
 			    const enum chipbustype buses,
 			    void *data)
 {
-	struct registered_master rmst = {0};
+	struct registered_master rmst;
+	bzero(&rmst, sizeof(rmst));
 
 	if (mst->shutdown) {
 		if (register_shutdown(mst->shutdown, data)) {

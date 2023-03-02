@@ -149,7 +149,7 @@ enum protocol {
 static const struct dev_entry devs_dediprog[] = {
 	{0x0483, 0xDADA, OK, "Dediprog", "SF100/SF200/SF600"},
 
-	{0},
+	{0,0,0,0,0},
 };
 
 struct dediprog_data {

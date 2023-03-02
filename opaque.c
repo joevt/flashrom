@@ -21,6 +21,7 @@
  */
 
 #include <stdint.h>
+#include <strings.h>
 #include "flash.h"
 #include "flashchips.h"
 #include "chipdrivers.h"
@@ -48,7 +49,8 @@ int erase_opaque(struct flashctx *flash, unsigned int blockaddr, unsigned int bl
 
 int register_opaque_master(const struct opaque_master *mst, void *data)
 {
-	struct registered_master rmst = {0};
+	struct registered_master rmst;
+	bzero(&rmst, sizeof(rmst));
 
 	if (mst->shutdown) {
 		if (register_shutdown(mst->shutdown, data)) {

@@ -31,7 +31,8 @@ INSTALL = install
 PREFIX  ?= /usr/local
 MANDIR  ?= $(PREFIX)/share/man
 BASHCOMPDIR ?= $(PREFIX)/share/bash-completion/completions
-CFLAGS  ?= -Os -Wall -Wextra -Wno-unused-parameter -Wshadow -Wmissing-prototypes -Wwrite-strings
+CFLAGS  ?= -Os -Wall -Wextra -Wno-unused-parameter -Wmissing-prototypes -Wwrite-strings
+# -Wshadow
 EXPORTDIR ?= .
 RANLIB  ?= ranlib
 PKG_CONFIG ?= pkg-config
@@ -877,6 +878,7 @@ endif
 
 ifeq (Darwin yes, $(TARGET_OS) $(filter $(USE_X86_MSR) $(USE_X86_PORT_IO) $(USE_RAW_MEM_ACCESS), yes))
 override LDFLAGS += -framework IOKit /usr/local/lib/libDirectHW.a
+#override CFLAGS += -std=c99
 endif
 
 ifeq (NetBSD yes, $(TARGET_OS) $(filter $(USE_X86_MSR) $(USE_X86_PORT_IO), yes))

@@ -216,7 +216,7 @@ static int fmap_bsearch_rom(struct fmap **fmap_out, struct flashctx *const flash
 	 * Zero (rom_offset == 0) is a special case and is handled using a
 	 * variable to track whether or not we've checked it.
 	 */
-	size_t offset;
+	size_t offset = 0;
 	for (stride = chip_size / 2; stride >= min_stride; stride /= 2) {
 		if (stride > len)
 			continue;

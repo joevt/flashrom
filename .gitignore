@@ -20,3 +20,6 @@
 
 target/
 DirectHW
+*.mode1v3
+*.pbxuser
+build/

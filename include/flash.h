@@ -593,6 +593,8 @@ uint8_t reverse_byte(uint8_t x);
 void reverse_bytes(uint8_t *dst, const uint8_t *src, size_t length);
 #ifdef __MINGW32__
 char* strtok_r(char *str, const char *delim, char **nextp);
+#endif
+#if defined(__MINGW32__) || (defined(__MACH__) && defined(__APPLE__) && (defined(__ppc__) || defined(__ppc64__)))
 char *strndup(const char *str, size_t size);
 #endif
 #if defined(__DJGPP__) || (!defined(__LIBPAYLOAD__) && !defined(HAVE_STRNLEN))

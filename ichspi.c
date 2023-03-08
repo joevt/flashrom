@@ -369,7 +369,7 @@ const struct preop_opcode_pair pops[] = {
 	 /* FIXME: WRSR requires either EWSR or WREN depending on chip type. */
 	{JEDEC_WREN, JEDEC_WRSR},
 	{JEDEC_EWSR, JEDEC_WRSR},
-	{0,}
+	{0,0}
 };
 
 /* Reasonable default configuration. Needs ad-hoc modifications if we
@@ -410,7 +410,10 @@ static OPCODE POSSIBLE_OPCODES[] = {
 	 {JEDEC_AAI_WORD_PROGRAM, SPI_OPCODE_TYPE_WRITE_NO_ADDRESS, 0},	// Auto Address Increment
 };
 
-static OPCODES O_EXISTING = {};
+static OPCODES O_EXISTING = {
+	{0,0},
+	{{0,0,0},{0,0,0},{0,0,0},{0,0,0},{0,0,0},{0,0,0},{0,0,0},{0,0,0}},
+};
 
 /* pretty printing functions */
 static void prettyprint_opcodes(OPCODES *ops)
@@ -1413,7 +1416,8 @@ static int ich_exec_sync_hwseq_xfer(const struct flashctx *flash, uint32_t hsfc_
 
 static void ich_get_region(const struct flashctx *flash, unsigned int addr, struct flash_region *region)
 {
-	struct ich_descriptors desc = { 0 };
+	struct ich_descriptors desc;
+	bzero(&desc, sizeof(desc));
 	const ssize_t nr = ich_number_of_regions(ich_generation, &desc.content);
 	const struct hwseq_data *hwseq_data = get_hwseq_data_from_context(flash);
 	const struct fd_region *fd_regions = hwseq_data->fd_regions;
@@ -2111,10 +2115,12 @@ static int init_ich_default(const struct programmer_cfg *cfg, void *spibar, enum
 	uint32_t tmp;
 	int ich_spi_rw_restricted = 0;
 	bool desc_valid = false;
-	struct ich_descriptors desc = { 0 };
+	struct ich_descriptors desc;
+	bzero(&desc, sizeof(desc));
 	enum ich_spi_mode ich_spi_mode = ich_auto;
 	size_t num_freg, num_pr, reg_pr0;
-	struct hwseq_data hwseq_data = { 0 };
+	struct hwseq_data hwseq_data;
+	bzero(&hwseq_data, sizeof(hwseq_data));
 	init_chipset_properties(&swseq_data, &hwseq_data, &num_freg, &num_pr, &reg_pr0, ich_gen);
 
 	int ret = get_ich_spi_mode_param(cfg, &ich_spi_mode);

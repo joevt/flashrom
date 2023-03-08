@@ -294,7 +294,8 @@ static uint8_t w836xx_deviceid_hwmon(uint16_t sio_port)
 
 void probe_superio_winbond(void)
 {
-	struct superio s = {0};
+	struct superio s;
+	bzero(&s, sizeof(s));
 	uint16_t winbond_ports[] = {WINBOND_SUPERIO_PORT1, WINBOND_SUPERIO_PORT2, 0};
 	uint16_t *i = winbond_ports;
 	uint8_t model;
@@ -1375,7 +1376,7 @@ static int intel_piix4_gpo_set(unsigned int gpo, int raise)
 	static const uint32_t nonmuxed_gpos = 0x58000101;
 
 	static const struct {unsigned int reg, mask, value; } piix4_gpo[] = {
-		{0},
+		{0,0,0},
 		{0xB0, 0x0001, 0x0000},        /* GPO1... */
 		{0xB0, 0x0001, 0x0000},
 		{0xB0, 0x0001, 0x0000},
@@ -1383,7 +1384,7 @@ static int intel_piix4_gpo_set(unsigned int gpo, int raise)
 		{0xB0, 0x0001, 0x0000},
 		{0xB0, 0x0001, 0x0000},
 		{0xB0, 0x0001, 0x0000},        /* ...GPO7: GENCFG bit 0 */
-		{0},
+		{0,0,0},
 		{0xB0, 0x0100, 0x0000},        /* GPO9:  GENCFG bit 8 */
 		{0xB0, 0x0200, 0x0000},        /* GPO10: GENCFG bit 9 */
 		{0xB0, 0x0400, 0x0000},        /* GPO11: GENCFG bit 10 */
@@ -1402,10 +1403,10 @@ static int intel_piix4_gpo_set(unsigned int gpo, int raise)
 		{0xB2, 0x2000, 0x2000},        /* GPO24: GENCFG bit 29 */
 		{0xB2, 0x4000, 0x4000},        /* GPO25: GENCFG bit 30 */
 		{0xB2, 0x8000, 0x8000},        /* GPO26: GENCFG bit 31 */
-		{0},
-		{0},
+		{0,0,0},
+		{0,0,0},
 		{0x4E, 0x0100, 0x0000},        /* ...GPO29: XBCS bit 8 */
-		{0}
+		{0,0,0}
 	};
 
 	dev = pcidev_find(0x8086, 0x7110);	/* Intel PIIX4 ISA bridge */

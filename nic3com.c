@@ -51,7 +51,7 @@ static const struct dev_entry nics_3com[] = {
 	/* 3C980C */
 	{0x10b7, 0x9805, NT, "3COM", "3C980C: EtherLink Server 10/100 PCI (TX)" },
 
-	{0},
+	{0,0,0,0,0},
 };
 
 static void nic3com_chip_writeb(const struct flashctx *flash, uint8_t val,

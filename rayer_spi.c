@@ -234,7 +234,7 @@ static const struct rayer_programmer *find_progtype(const char *prog_type)
 		{"stk200",		NT,	"Atmel STK200/300 adapter",			&atmel_stk200},
 		{"wiggler",		OK,	"Wiggler LPT",					&wiggler_lpt},
 		{"spi_tt",		NT,	"SPI Tiny Tools (SPI_TT LPT)",			&spi_tt},
-		{0},
+		{0,0,0,0},
 	};
 	if (!prog_type)
 		return &rayer_spi_types[0];

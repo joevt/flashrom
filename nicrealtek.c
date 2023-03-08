@@ -34,7 +34,7 @@ static const struct dev_entry nics_realtek[] = {
 	{0x10ec, 0x8169, NT, "Realtek", "RTL8169"},
 	{0x1113, 0x1211, OK, "SMC", "1211TX"}, /* RTL8139 clone */
 
-	{0},
+	{0,0,0,0,0},
 };
 
 static void nicrealtek_chip_writeb(const struct flashctx *flash, uint8_t val, chipaddr addr)

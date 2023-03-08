@@ -653,7 +653,7 @@ const struct board_info boards_known[] = {
 	B("ZOTAC",	"ZBOX HD-ID11",		OK, NULL, NULL),
 #endif
 
-	{0},
+	B(0,0,0,0,0),
 };
 
 /* Please keep this list alphabetically ordered by vendor/board. */
@@ -687,5 +687,5 @@ const struct board_info laptops_known[] = {
 	B("Teclast",	"X98 Air 3G",		OK, NULL, NULL),
 #endif
 
-	{0},
+	B(0,0,0,0,0),
 };

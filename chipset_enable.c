@@ -2182,7 +2182,7 @@ const struct penable chipset_enables[] = {
 	{0x8086, 0x7a8c, B_S,    NT,  "Intel", "HM670",				enable_flash_pch600},
 	{0x8086, 0x7e23, B_S,    DEP, "Intel", "Meteor Lake-P/M",		enable_flash_mtl},
 #endif
-	{0},
+	{0,0,0,0,0,0,0},
 };
 
 int chipset_flash_enable(const struct programmer_cfg *cfg)

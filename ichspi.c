@@ -1435,7 +1435,8 @@ static void ich_get_region(const struct flashctx *flash, unsigned int addr, stru
 	region->start = 0;
 	region->end = flashrom_flash_getsize(flash);
 
-	for (ssize_t i = 0; i < nr; i++) {
+	ssize_t i;
+	for (i = 0; i < nr; i++) {
 		uint32_t base = fd_regions[i].base;
 		uint32_t limit = fd_regions[i].limit;
 		enum ich_access_protection level = fd_regions[i].level;

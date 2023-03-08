@@ -137,7 +137,8 @@ struct flashrom_board_info *flashrom_supported_boards(void)
 		return NULL;
 	}
 
-	for (int i = 0; i < boards_known_size; ++i) {
+	int i;
+	for (i = 0; i < boards_known_size; ++i) {
 		supported_boards[i].vendor = binfo[i].vendor;
 		supported_boards[i].name = binfo[i].name;
 		supported_boards[i].working =
@@ -170,7 +171,8 @@ struct flashrom_chipset_info *flashrom_supported_chipsets(void)
 		return NULL;
 	}
 
-	for (int i = 0; i < chipset_enables_size; ++i) {
+	int i;
+	for (i = 0; i < chipset_enables_size; ++i) {
 		supported_chipsets[i].vendor = chipset[i].vendor_name;
 		supported_chipsets[i].chipset = chipset[i].device_name;
 		supported_chipsets[i].vendor_id = chipset[i].vendor_id;

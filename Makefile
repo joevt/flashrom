@@ -876,9 +876,17 @@ ifeq ($(USE_RAW_MEM_ACCESS), yes)
 PROGRAMMER_OBJS += hwaccess_physmap.o
 endif
 
+ifeq ($(TARGET_OS), Darwin)
+DARWIN_VERSION ?= $(shell uname -r | sed -E '/\..*/s///')
+NEED_STRNDUP ?= $(shell echo $$(($(DARWIN_VERSION) < 11)) )
+endif
+
+ifeq ($(NEED_STRNDUP), 1)
+override CFLAGS += -D__NEED_STRNDUP__=1
+endif
+
 ifeq (Darwin yes, $(TARGET_OS) $(filter $(USE_X86_MSR) $(USE_X86_PORT_IO) $(USE_RAW_MEM_ACCESS), yes))
 override LDFLAGS += -framework IOKit /usr/local/lib/libDirectHW.a
-#override CFLAGS += -std=c99
 endif
 
 ifeq (NetBSD yes, $(TARGET_OS) $(filter $(USE_X86_MSR) $(USE_X86_PORT_IO), yes))

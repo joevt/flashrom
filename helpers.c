@@ -104,8 +104,8 @@ char* strtok_r(char *str, const char *delim, char **nextp)
 }
 #endif
 
-#if defined(__MINGW32__) || (defined(__MACH__) && defined(__APPLE__) && (defined(__ppc__) || defined(__ppc64__)))
-/* strndup is a POSIX function not present in MinGW or Mac OS X 10.5 */
+#if defined(__MINGW32__) || defined(__NEED_STRNDUP__)
+/* strndup is a POSIX function not present in MinGW or Mac OS X 10.6 */
 char *strndup(const char *src, size_t maxlen)
 {
 	char *retbuf;

@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		610C99E329C44C7F00638DE0 /* libDirectHW.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 610C99E229C44C7F00638DE0 /* libDirectHW.a */; };
 		6368FC1529AE54F1003FFB41 /* libflashrom.c in Sources */ = {isa = PBXBuildFile; fileRef = 6368FBAE29AE54F1003FFB41 /* libflashrom.c */; };
 		6368FC1629AE54F1003FFB41 /* flashrom.c in Sources */ = {isa = PBXBuildFile; fileRef = 6368FBAF29AE54F1003FFB41 /* flashrom.c */; };
 		6368FC1729AE54F1003FFB41 /* fmap.c in Sources */ = {isa = PBXBuildFile; fileRef = 6368FBB029AE54F1003FFB41 /* fmap.c */; };
@@ -89,7 +90,6 @@
 		6368FCC129AE5ABD003FFB41 /* IOKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 6368FCC029AE5ABD003FFB41 /* IOKit.framework */; };
 		6368FD7429AE5C02003FFB41 /* CoreFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 6368FD7329AE5C02003FFB41 /* CoreFoundation.framework */; };
 		6368FD7929AE5D3B003FFB41 /* libusb-1.0.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 6368FD7829AE5D3B003FFB41 /* libusb-1.0.dylib */; };
-		6368FD7C29AE5D86003FFB41 /* libDirectHW.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 6368FD7B29AE5D86003FFB41 /* libDirectHW.dylib */; };
 		6368FD7E29AE5DF3003FFB41 /* libftdi1.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 6368FD7D29AE5DF3003FFB41 /* libftdi1.dylib */; };
 		6368FD8129AE5ECB003FFB41 /* libpci.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6368FD8029AE5ECB003FFB41 /* libpci.a */; };
 		6368FD8429AE5F34003FFB41 /* libz.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 6368FD8329AE5F34003FFB41 /* libz.dylib */; };
@@ -111,6 +111,7 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		610C99E229C44C7F00638DE0 /* libDirectHW.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libDirectHW.a; path = /usr/local/lib/libDirectHW.a; sourceTree = "<absolute>"; };
 		6368FBAE29AE54F1003FFB41 /* libflashrom.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = libflashrom.c; sourceTree = "<group>"; };
 		6368FBAF29AE54F1003FFB41 /* flashrom.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = flashrom.c; sourceTree = "<group>"; };
 		6368FBB029AE54F1003FFB41 /* fmap.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = fmap.c; sourceTree = "<group>"; };
@@ -217,7 +218,6 @@
 		6368FCC029AE5ABD003FFB41 /* IOKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = IOKit.framework; path = /System/Library/Frameworks/IOKit.framework; sourceTree = "<absolute>"; };
 		6368FD7329AE5C02003FFB41 /* CoreFoundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreFoundation.framework; path = /System/Library/Frameworks/CoreFoundation.framework; sourceTree = "<absolute>"; };
 		6368FD7829AE5D3B003FFB41 /* libusb-1.0.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = "libusb-1.0.dylib"; path = "/usr/local/lib/libusb-1.0.dylib"; sourceTree = "<absolute>"; };
-		6368FD7B29AE5D86003FFB41 /* libDirectHW.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libDirectHW.dylib; path = /usr/local/lib/libDirectHW.dylib; sourceTree = "<absolute>"; };
 		6368FD7D29AE5DF3003FFB41 /* libftdi1.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libftdi1.dylib; path = /usr/local/lib/libftdi1.dylib; sourceTree = "<absolute>"; };
 		6368FD8029AE5ECB003FFB41 /* libpci.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libpci.a; path = /usr/local/lib/libpci.a; sourceTree = "<absolute>"; };
 		6368FD8329AE5F34003FFB41 /* libz.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libz.dylib; path = /usr/lib/libz.dylib; sourceTree = "<absolute>"; };
@@ -235,10 +235,10 @@
 				6368FCC129AE5ABD003FFB41 /* IOKit.framework in Frameworks */,
 				6368FD7429AE5C02003FFB41 /* CoreFoundation.framework in Frameworks */,
 				6368FD7929AE5D3B003FFB41 /* libusb-1.0.dylib in Frameworks */,
-				6368FD7C29AE5D86003FFB41 /* libDirectHW.dylib in Frameworks */,
 				6368FD7E29AE5DF3003FFB41 /* libftdi1.dylib in Frameworks */,
 				6368FD8129AE5ECB003FFB41 /* libpci.a in Frameworks */,
 				6368FD8429AE5F34003FFB41 /* libz.dylib in Frameworks */,
+				610C99E329C44C7F00638DE0 /* libDirectHW.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -397,10 +397,10 @@
 		C6A0FF2B0290797F04C91782 /* Libraries */ = {
 			isa = PBXGroup;
 			children = (
-				6368FD8329AE5F34003FFB41 /* libz.dylib */,
+				610C99E229C44C7F00638DE0 /* libDirectHW.a */,
 				6368FD8029AE5ECB003FFB41 /* libpci.a */,
+				6368FD8329AE5F34003FFB41 /* libz.dylib */,
 				6368FD7D29AE5DF3003FFB41 /* libftdi1.dylib */,
-				6368FD7B29AE5D86003FFB41 /* libDirectHW.dylib */,
 				6368FD7829AE5D3B003FFB41 /* libusb-1.0.dylib */,
 			);
 			name = Libraries;

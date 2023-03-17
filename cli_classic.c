@@ -608,7 +608,7 @@ int main(int argc, char *argv[])
 	};
 	int ret = 0;
 
-	static const char optstring[] = "r:Rw:v:nNVEfc:l:i:p:Lzho:x";
+	static const char optstring[] = "r:Rw:v:nNVEfgc:l:i:p:Lzho:x";
 	static const struct option long_options[] = {
 		{"read",		1, NULL, 'r'},
 		{"write",		1, NULL, 'w'},
@@ -620,6 +620,7 @@ int main(int argc, char *argv[])
 		{"chip",		1, NULL, 'c'},
 		{"verbose",		0, NULL, 'V'},
 		{"force",		0, NULL, 'f'},
+		{"getchar",		0, NULL, 'g'},
 		{"layout",		1, NULL, 'l'},
 		{"ifd",			0, NULL, OPTION_IFD},
 		{"fmap",		0, NULL, OPTION_FMAP},
@@ -727,6 +728,9 @@ int main(int argc, char *argv[])
 			break;
 		case 'f':
 			force = true;
+			break;
+		case 'g':
+			getchar();
 			break;
 		case 'l':
 			if (layoutfile)

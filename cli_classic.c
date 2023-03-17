@@ -102,6 +102,7 @@ static void cli_classic_usage(const char *name)
 	       " -V | --verbose                     more verbose output\n"
 	       " -c | --chip <chipname>             probe only for specified flash chip\n"
 	       " -f | --force                       force specific operations (see man page)\n"
+	       " -g | --getchar                     wait for a character from std-in (for debugging)\n"
 	       " -n | --noverify                    don't auto-verify\n"
 	       " -N | --noverify-all                verify included regions only (cf. -i)\n"
 	       " -x | --extract                     extract regions to files\n"
@@ -870,7 +871,7 @@ int main(int argc, char *argv[])
 	int ret = 0;
 
 	struct cli_options options = { 0 };
-	static const char optstring[] = "r:Rw:v:nNVEfc:l:i:p:Lzho:x";
+	static const char optstring[] = "r:Rw:v:nNVEfgc:l:i:p:Lzho:x";
 	static const struct option long_options[] = {
 		{"read",		1, NULL, 'r'},
 		{"write",		1, NULL, 'w'},
@@ -882,6 +883,7 @@ int main(int argc, char *argv[])
 		{"chip",		1, NULL, 'c'},
 		{"verbose",		0, NULL, 'V'},
 		{"force",		0, NULL, 'f'},
+        {"getchar",		0, NULL, 'g'},
 		{"layout",		1, NULL, 'l'},
 		{"ifd",			0, NULL, OPTION_IFD},
 		{"fmap",		0, NULL, OPTION_FMAP},

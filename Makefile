@@ -887,6 +887,8 @@ endif
 
 ifeq (Darwin yes, $(TARGET_OS) $(filter $(USE_X86_MSR) $(USE_X86_PORT_IO) $(USE_RAW_MEM_ACCESS), yes))
 override LDFLAGS += -framework IOKit /usr/local/lib/libDirectHW.a
+override LDFLAGS += -g
+override CFLAGS += -g
 endif
 
 ifeq (NetBSD yes, $(TARGET_OS) $(filter $(USE_X86_MSR) $(USE_X86_PORT_IO), yes))

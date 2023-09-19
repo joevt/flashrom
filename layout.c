@@ -194,6 +194,15 @@ error:
 	return 1;
 }
 
+static char *sanitise_filename(char *filename)
+{
+	for (unsigned i = 0; filename[i]; i++) {
+		if (isspace((unsigned char)filename[i]))
+			filename[i] = '_';
+	}
+	return filename;
+}
+
 /* returns 0 to indicate success, 1 to indicate failure */
 static int include_region(struct flashrom_layout *const l, const char *name,
 			  const char *file)
@@ -202,7 +211,18 @@ static int include_region(struct flashrom_layout *const l, const char *name,
 	if (entry) {
 		entry->included = true;
 		if (file)
-			entry->file = strdup(file);
+			entry->file = sanitise_filename(strdup(file));
+		return 0;
+	}
+	return 1;
+}
+
+/* returns 0 to indicate success, 1 to indicate failure */
+static int exclude_region(struct flashrom_layout *const l, const char *name)
+{
+	struct romentry *const entry = _layout_entry_by_name(l, name);
+	if (entry) {
+		entry->included = false;
 		return 0;
 	}
 	return 1;
@@ -292,7 +312,7 @@ int included_regions_overlap(const struct flashrom_layout *const l)
 			if (lhsr->end < rhsr->start)
 				continue;
 
-			msg_gwarn("Regions %s [0x%08x-0x%08x] and %s [0x%08x-0x%08x] overlap\n",
+			msg_gwarn("Regions %s [0x%08"PRIx32"-0x%08"PRIx32"] and %s [0x%08"PRIx32"-0x%08"PRIx32"] overlap\n",
 				  lhsr->name, lhsr->start, lhsr->end, rhsr->name, rhsr->start, rhsr->end);
 			overlap_detected = 1;
 		}
@@ -342,18 +362,12 @@ void prepare_layout_for_extraction(struct flashctx *flash)
 {
 	const struct flashrom_layout *const l = get_layout(flash);
 	struct romentry *entry = NULL;
-	unsigned int i;
 
 	while ((entry = mutable_layout_next(l, entry))) {
 		entry->included = true;
 
 		if (!entry->file)
-			entry->file = strdup(entry->region.name);
-
-		for (i = 0; entry->file[i]; ++i) {
-			if (isspace((unsigned char)entry->file[i]))
-				entry->file[i] = '_';
-		}
+			entry->file = sanitise_filename(strdup(entry->region.name));
 	}
 }
 
@@ -436,6 +450,11 @@ _err_ret:
 int flashrom_layout_include_region(struct flashrom_layout *const layout, const char *name)
 {
 	return include_region(layout, name, NULL);
+}
+
+int flashrom_layout_exclude_region(struct flashrom_layout *const layout, const char *name)
+{
+	return exclude_region(layout, name);
 }
 
 int flashrom_layout_get_region_range(struct flashrom_layout *const l, const char *name,

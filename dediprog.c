@@ -1034,12 +1034,10 @@ static struct spi_master spi_master_dediprog = {
 	.max_data_read	= 16, /* 18 seems to work fine as well, but 19 times out sometimes with FW 5.15. */
 	.max_data_write	= 16,
 	.command	= dediprog_spi_send_command,
-	.multicommand	= default_spi_send_multicommand,
 	.read		= dediprog_spi_read,
 	.write_256	= dediprog_spi_write_256,
 	.write_aai	= dediprog_spi_write_aai,
 	.shutdown	= dediprog_shutdown,
-	.probe_opcode	= default_spi_probe_opcode,
 };
 
 /*

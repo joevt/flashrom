@@ -83,17 +83,17 @@ enum chipbustype {
  */
 enum write_granularity {
 	/* We assume 256 byte granularity by default. */
-	write_gran_256bytes = 0,/* If less than 256 bytes are written, the unwritten bytes are undefined. */
-	write_gran_1bit,	/* Each bit can be cleared individually. */
-	write_gran_1byte,	/* A byte can be written once. Further writes to an already written byte cause
+	WRITE_GRAN_256BYTES = 0,/* If less than 256 bytes are written, the unwritten bytes are undefined. */
+	WRITE_GRAN_1BIT,	/* Each bit can be cleared individually. */
+	WRITE_GRAN_1BYTE,	/* A byte can be written once. Further writes to an already written byte cause
 				 * its contents to be either undefined or to stay unchanged. */
-	write_gran_128bytes,	/* If less than 128 bytes are written, the unwritten bytes are undefined. */
-	write_gran_264bytes,	/* If less than 264 bytes are written, the unwritten bytes are undefined. */
-	write_gran_512bytes,	/* If less than 512 bytes are written, the unwritten bytes are undefined. */
-	write_gran_528bytes,	/* If less than 528 bytes are written, the unwritten bytes are undefined. */
-	write_gran_1024bytes,	/* If less than 1024 bytes are written, the unwritten bytes are undefined. */
-	write_gran_1056bytes,	/* If less than 1056 bytes are written, the unwritten bytes are undefined. */
-	write_gran_1byte_implicit_erase, /* EEPROMs and other chips with implicit erase and 1-byte writes. */
+	WRITE_GRAN_128BYTES,	/* If less than 128 bytes are written, the unwritten bytes are undefined. */
+	WRITE_GRAN_264BYTES,	/* If less than 264 bytes are written, the unwritten bytes are undefined. */
+	WRITE_GRAN_512BYTES,	/* If less than 512 bytes are written, the unwritten bytes are undefined. */
+	WRITE_GRAN_528BYTES,	/* If less than 528 bytes are written, the unwritten bytes are undefined. */
+	WRITE_GRAN_1024BYTES,	/* If less than 1024 bytes are written, the unwritten bytes are undefined. */
+	WRITE_GRAN_1056BYTES,	/* If less than 1056 bytes are written, the unwritten bytes are undefined. */
+	WRITE_GRAN_1BYTE_IMPLICIT_ERASE, /* EEPROMs and other chips with implicit erase and 1-byte writes. */
 };
 
 /*
@@ -322,75 +322,81 @@ enum block_erase_func {
 	TEST_ERASE_INJECTOR, /* special case must come last. */
 };
 
-#define NO_BLOCKPROTECT_FUNC NULL
-#define SPI_DISABLE_BLOCKPROTECT spi_disable_blockprotect
-#define SPI_DISABLE_BLOCKPROTECT_BP2_EP_SRWD spi_disable_blockprotect_bp2_ep_srwd
-#define SPI_DISABLE_BLOCKPROTECT_BP1_SRWD spi_disable_blockprotect_bp1_srwd
-#define SPI_DISABLE_BLOCKPROTECT_BP2_SRWD spi_disable_blockprotect_bp2_srwd
-#define SPI_DISABLE_BLOCKPROTECT_BP3_SRWD spi_disable_blockprotect_bp3_srwd
-#define SPI_DISABLE_BLOCKPROTECT_BP4_SRWD spi_disable_blockprotect_bp4_srwd
-#define SPI_DISABLE_BLOCKPROTECT_AT45DB spi_disable_blockprotect_at45db
-#define SPI_DISABLE_BLOCKPROTECT_AT25F spi_disable_blockprotect_at25f
-#define SPI_DISABLE_BLOCKPROTECT_AT25FS010 spi_disable_blockprotect_at25fs010
-#define SPI_DISABLE_BLOCKPROTECT_AT25FS040 spi_disable_blockprotect_at25fs040
-#define SPI_DISABLE_BLOCKPROTECT_AT25F512A spi_disable_blockprotect_at25f512a
-#define SPI_DISABLE_BLOCKPROTECT_AT25F512B spi_disable_blockprotect_at25f512b
-#define SPI_DISABLE_BLOCKPROTECT_AT2X_GLOBAL_UNPROTECT spi_disable_blockprotect_at2x_global_unprotect
-#define SPI_DISABLE_BLOCKPROTECT_AT2X_GLOBAL_UNPROTECT_SEC spi_disable_blockprotect_at2x_global_unprotect_sec
-#define SPI_DISABLE_BLOCKPROTECT_SST26_GLOBAL_UNPROTECT spi_disable_blockprotect_sst26_global_unprotect
-#define SPI_DISABLE_BLOCKPROTECT_N25Q spi_disable_blockprotect_n25q
-#define UNLOCK_REGSPACE2_BLOCK_ERASER_0 unlock_regspace2_block_eraser_0
-#define UNLOCK_REGSPACE2_BLOCK_ERASER_1 unlock_regspace2_block_eraser_1
-#define UNLOCK_REGSPACE2_UNIFORM_32K unlock_regspace2_uniform_32k
-#define UNLOCK_REGSPACE2_UNIFORM_64K unlock_regspace2_uniform_64k
-#define UNLOCK_28F004S5 unlock_28f004s5
-#define UNLOCK_LH28F008BJT unlock_lh28f008bjt
-#define UNLOCK_SST_FWHUB unlock_sst_fwhub
-#define UNPROTECT_28SF040 unprotect_28sf040
+enum blockprotect_func {
+	NO_BLOCKPROTECT_FUNC = 0, /* 0 indicates no unlock function set. */
+	SPI_DISABLE_BLOCKPROTECT,
+	SPI_DISABLE_BLOCKPROTECT_BP2_EP_SRWD,
+	SPI_DISABLE_BLOCKPROTECT_BP1_SRWD,
+	SPI_DISABLE_BLOCKPROTECT_BP2_SRWD,
+	SPI_DISABLE_BLOCKPROTECT_BP3_SRWD,
+	SPI_DISABLE_BLOCKPROTECT_BP4_SRWD,
+	SPI_DISABLE_BLOCKPROTECT_AT45DB,
+	SPI_DISABLE_BLOCKPROTECT_AT25F,
+	SPI_DISABLE_BLOCKPROTECT_AT25FS010,
+	SPI_DISABLE_BLOCKPROTECT_AT25FS040,
+	SPI_DISABLE_BLOCKPROTECT_AT25F512A,
+	SPI_DISABLE_BLOCKPROTECT_AT25F512B,
+	SPI_DISABLE_BLOCKPROTECT_AT2X_GLOBAL_UNPROTECT,
+	SPI_DISABLE_BLOCKPROTECT_AT2X_GLOBAL_UNPROTECT_SEC,
+	SPI_DISABLE_BLOCKPROTECT_SST26_GLOBAL_UNPROTECT,
+	SPI_DISABLE_BLOCKPROTECT_N25Q,
+	UNLOCK_REGSPACE2_BLOCK_ERASER_0,
+	UNLOCK_REGSPACE2_BLOCK_ERASER_1,
+	UNLOCK_REGSPACE2_UNIFORM_32K,
+	UNLOCK_REGSPACE2_UNIFORM_64K,
+	UNLOCK_28F004S5,
+	UNLOCK_LH28F008BJT,
+	UNLOCK_SST_FWHUB,
+	UNPROTECT_28SF040,
+};
 
-#define NO_PRINTLOCK_FUNC NULL
-#define PRINTLOCK_AT49F printlock_at49f
-#define PRINTLOCK_REGSPACE2_BLOCK_ERASER_0 printlock_regspace2_block_eraser_0
-#define PRINTLOCK_REGSPACE2_BLOCK_ERASER_1 printlock_regspace2_block_eraser_1
-#define PRINTLOCK_SST_FWHUB printlock_sst_fwhub
-#define PRINTLOCK_W39F010 printlock_w39f010
-#define PRINTLOCK_W39L010 printlock_w39l010
-#define PRINTLOCK_W39L020 printlock_w39l020
-#define PRINTLOCK_W39L040 printlock_w39l040
-#define PRINTLOCK_W39V040A printlock_w39v040a
-#define PRINTLOCK_W39V040B printlock_w39v040b
-#define PRINTLOCK_W39V040C printlock_w39v040c
-#define PRINTLOCK_W39V040FA printlock_w39v040fa
-#define PRINTLOCK_W39V040FB printlock_w39v040fb
-#define PRINTLOCK_W39V040FC printlock_w39v040fc
-#define PRINTLOCK_W39V080A printlock_w39v080a
-#define PRINTLOCK_W39V080FA printlock_w39v080fa
-#define PRINTLOCK_W39V080FA_DUAL printlock_w39v080fa_dual
-#define SPI_PRETTYPRINT_STATUS_REGISTER_AMIC_A25L032 spi_prettyprint_status_register_amic_a25l032
-#define SPI_PRETTYPRINT_STATUS_REGISTER_AT25DF spi_prettyprint_status_register_at25df
-#define SPI_PRETTYPRINT_STATUS_REGISTER_AT25DF_SEC spi_prettyprint_status_register_at25df_sec
-#define SPI_PRETTYPRINT_STATUS_REGISTER_AT25F spi_prettyprint_status_register_at25f
-#define SPI_PRETTYPRINT_STATUS_REGISTER_AT25F4096 spi_prettyprint_status_register_at25f4096
-#define SPI_PRETTYPRINT_STATUS_REGISTER_AT25F512A spi_prettyprint_status_register_at25f512a
-#define SPI_PRETTYPRINT_STATUS_REGISTER_AT25F512B spi_prettyprint_status_register_at25f512b
-#define SPI_PRETTYPRINT_STATUS_REGISTER_AT25FS010 spi_prettyprint_status_register_at25fs010
-#define SPI_PRETTYPRINT_STATUS_REGISTER_AT25FS040 spi_prettyprint_status_register_at25fs040
-#define SPI_PRETTYPRINT_STATUS_REGISTER_AT26DF081A spi_prettyprint_status_register_at26df081a
-#define SPI_PRETTYPRINT_STATUS_REGISTER_AT45DB spi_prettyprint_status_register_at45db
-#define SPI_PRETTYPRINT_STATUS_REGISTER_BP1_SRWD spi_prettyprint_status_register_bp1_srwd
-#define SPI_PRETTYPRINT_STATUS_REGISTER_BP2_BPL spi_prettyprint_status_register_bp2_bpl
-#define SPI_PRETTYPRINT_STATUS_REGISTER_BP2_EP_SRWD spi_prettyprint_status_register_bp2_ep_srwd
-#define SPI_PRETTYPRINT_STATUS_REGISTER_BP2_SRWD spi_prettyprint_status_register_bp2_srwd
-#define SPI_PRETTYPRINT_STATUS_REGISTER_BP2_TB_BPL spi_prettyprint_status_register_bp2_tb_bpl
-#define SPI_PRETTYPRINT_STATUS_REGISTER_BP3_SRWD spi_prettyprint_status_register_bp3_srwd
-#define SPI_PRETTYPRINT_STATUS_REGISTER_BP4_SRWD spi_prettyprint_status_register_bp4_srwd
-#define SPI_PRETTYPRINT_STATUS_REGISTER_DEFAULT_WELWIP spi_prettyprint_status_register_default_welwip
-#define SPI_PRETTYPRINT_STATUS_REGISTER_EN25S_WP spi_prettyprint_status_register_en25s_wp
-#define SPI_PRETTYPRINT_STATUS_REGISTER_N25Q spi_prettyprint_status_register_n25q
-#define SPI_PRETTYPRINT_STATUS_REGISTER_PLAIN spi_prettyprint_status_register_plain
-#define SPI_PRETTYPRINT_STATUS_REGISTER_SST25 spi_prettyprint_status_register_sst25
-#define SPI_PRETTYPRINT_STATUS_REGISTER_SST25VF016 spi_prettyprint_status_register_sst25vf016
-#define SPI_PRETTYPRINT_STATUS_REGISTER_SST25VF040B spi_prettyprint_status_register_sst25vf040b
+enum printlock_func {
+	NO_PRINTLOCK_FUNC,
+	PRINTLOCK_AT49F,
+	PRINTLOCK_REGSPACE2_BLOCK_ERASER_0,
+	PRINTLOCK_REGSPACE2_BLOCK_ERASER_1,
+	PRINTLOCK_SST_FWHUB,
+	PRINTLOCK_W39F010,
+	PRINTLOCK_W39L010,
+	PRINTLOCK_W39L020,
+	PRINTLOCK_W39L040,
+	PRINTLOCK_W39V040A,
+	PRINTLOCK_W39V040B,
+	PRINTLOCK_W39V040C,
+	PRINTLOCK_W39V040FA,
+	PRINTLOCK_W39V040FB,
+	PRINTLOCK_W39V040FC,
+	PRINTLOCK_W39V080A,
+	PRINTLOCK_W39V080FA,
+	PRINTLOCK_W39V080FA_DUAL,
+	SPI_PRETTYPRINT_STATUS_REGISTER_AMIC_A25L032,
+	SPI_PRETTYPRINT_STATUS_REGISTER_AT25DF,
+	SPI_PRETTYPRINT_STATUS_REGISTER_AT25DF_SEC,
+	SPI_PRETTYPRINT_STATUS_REGISTER_AT25F,
+	SPI_PRETTYPRINT_STATUS_REGISTER_AT25F4096,
+	SPI_PRETTYPRINT_STATUS_REGISTER_AT25F512A,
+	SPI_PRETTYPRINT_STATUS_REGISTER_AT25F512B,
+	SPI_PRETTYPRINT_STATUS_REGISTER_AT25FS010,
+	SPI_PRETTYPRINT_STATUS_REGISTER_AT25FS040,
+	SPI_PRETTYPRINT_STATUS_REGISTER_AT26DF081A,
+	SPI_PRETTYPRINT_STATUS_REGISTER_AT45DB,
+	SPI_PRETTYPRINT_STATUS_REGISTER_BP1_SRWD,
+	SPI_PRETTYPRINT_STATUS_REGISTER_BP2_BPL,
+	SPI_PRETTYPRINT_STATUS_REGISTER_BP2_EP_SRWD,
+	SPI_PRETTYPRINT_STATUS_REGISTER_BP2_SRWD,
+	SPI_PRETTYPRINT_STATUS_REGISTER_BP2_TB_BPL,
+	SPI_PRETTYPRINT_STATUS_REGISTER_BP3_SRWD,
+	SPI_PRETTYPRINT_STATUS_REGISTER_BP4_SRWD,
+	SPI_PRETTYPRINT_STATUS_REGISTER_DEFAULT_WELWIP,
+	SPI_PRETTYPRINT_STATUS_REGISTER_EN25S_WP,
+	SPI_PRETTYPRINT_STATUS_REGISTER_N25Q,
+	SPI_PRETTYPRINT_STATUS_REGISTER_PLAIN,
+	SPI_PRETTYPRINT_STATUS_REGISTER_SST25,
+	SPI_PRETTYPRINT_STATUS_REGISTER_SST25VF016,
+	SPI_PRETTYPRINT_STATUS_REGISTER_SST25VF040B,
+};
+typedef int (printlockfunc_t)(struct flashctx *flash);
+printlockfunc_t *lookup_printlock_func_ptr(struct flashctx *flash);
 
 struct flashchip {
 	const char *vendor;
@@ -443,9 +449,7 @@ struct flashchip {
 	/*
 	 * Erase blocks and associated erase function. Any chip erase function
 	 * is stored as chip-sized virtual block together with said function.
-	 * The first one that fits will be chosen. There is currently no way to
-	 * influence that behaviour. For testing just comment out the other
-	 * elements or set the function pointer to NULL.
+	 * The logic for how to optimally select erase functions is in erasure_layout.c
 	 */
 	struct block_eraser {
 		struct eraseblock {
@@ -457,8 +461,8 @@ struct flashchip {
 		enum block_erase_func block_erase;
 	} block_erasers[NUM_ERASEFUNCTIONS];
 
-	int (*printlock) (struct flashctx *flash);
-	int (*unlock) (struct flashctx *flash);
+	enum printlock_func printlock;
+	enum blockprotect_func unlock;
 	enum write_func write;
 	enum read_func read;
 	struct voltage {
@@ -510,6 +514,8 @@ struct flashchip {
 };
 
 typedef int (*chip_restore_fn_cb_t)(struct flashctx *flash, void *data);
+typedef int (blockprotect_func_t)(struct flashctx *flash);
+blockprotect_func_t *lookup_blockprotect_func_ptr(const struct flashchip *const chip);
 
 struct flashrom_flashctx {
 	struct flashchip *chip;

@@ -315,14 +315,12 @@ static const struct spi_master spi_master_it87xx = {
 	.max_data_read	= 3,
 	.max_data_write	= MAX_DATA_UNSPECIFIED,
 	.command	= it8716f_spi_send_command,
-	.multicommand	= default_spi_send_multicommand,
 	.map_flash_region	= physmap,
 	.unmap_flash_region	= physunmap,
 	.read		= it8716f_spi_chip_read,
 	.write_256	= it8716f_spi_chip_write_256,
 	.write_aai	= spi_chip_write_1,
 	.shutdown	= it8716f_shutdown,
-	.probe_opcode	= default_spi_probe_opcode,
 };
 
 static uint16_t it87spi_probe(const struct programmer_cfg *cfg, uint16_t port)

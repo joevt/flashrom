@@ -26,6 +26,7 @@
 int spi_aai_write(struct flashctx *flash, const uint8_t *buf, unsigned int start, unsigned int len);
 int spi_chip_write_256(struct flashctx *flash, const uint8_t *buf, unsigned int start, unsigned int len);
 int spi_chip_read(struct flashctx *flash, uint8_t *buf, unsigned int start, int unsigned len);
+bool spi_probe_opcode(const struct flashctx *flash, uint8_t opcode);
 
 /* spi25.c */
 int probe_spi_rdid(struct flashctx *flash);
@@ -67,45 +68,6 @@ int spi_set_extended_address(struct flashctx *, uint8_t addr_high);
 int spi_read_register(const struct flashctx *flash, enum flash_reg reg, uint8_t *value);
 int spi_write_register(const struct flashctx *flash, enum flash_reg reg, uint8_t value);
 void spi_prettyprint_status_register_bit(uint8_t status, int bit);
-int spi_prettyprint_status_register_plain(struct flashctx *flash);
-int spi_prettyprint_status_register_default_welwip(struct flashctx *flash);
-int spi_prettyprint_status_register_bp1_srwd(struct flashctx *flash);
-int spi_prettyprint_status_register_bp2_srwd(struct flashctx *flash);
-int spi_prettyprint_status_register_bp3_srwd(struct flashctx *flash);
-int spi_prettyprint_status_register_bp4_srwd(struct flashctx *flash);
-int spi_prettyprint_status_register_bp2_bpl(struct flashctx *flash);
-int spi_prettyprint_status_register_bp2_tb_bpl(struct flashctx *flash);
-int spi_disable_blockprotect(struct flashctx *flash);
-int spi_disable_blockprotect_bp1_srwd(struct flashctx *flash);
-int spi_disable_blockprotect_bp2_srwd(struct flashctx *flash);
-int spi_disable_blockprotect_bp3_srwd(struct flashctx *flash);
-int spi_disable_blockprotect_bp4_srwd(struct flashctx *flash);
-int spi_prettyprint_status_register_amic_a25l032(struct flashctx *flash);
-int spi_prettyprint_status_register_at25df(struct flashctx *flash);
-int spi_prettyprint_status_register_at25df_sec(struct flashctx *flash);
-int spi_prettyprint_status_register_at25f(struct flashctx *flash);
-int spi_prettyprint_status_register_at25f512a(struct flashctx *flash);
-int spi_prettyprint_status_register_at25f512b(struct flashctx *flash);
-int spi_prettyprint_status_register_at25f4096(struct flashctx *flash);
-int spi_prettyprint_status_register_at25fs010(struct flashctx *flash);
-int spi_prettyprint_status_register_at25fs040(struct flashctx *flash);
-int spi_prettyprint_status_register_at26df081a(struct flashctx *flash);
-int spi_disable_blockprotect_at2x_global_unprotect(struct flashctx *flash);
-int spi_disable_blockprotect_at2x_global_unprotect_sec(struct flashctx *flash);
-int spi_disable_blockprotect_at25f(struct flashctx *flash);
-int spi_disable_blockprotect_at25f512a(struct flashctx *flash);
-int spi_disable_blockprotect_at25f512b(struct flashctx *flash);
-int spi_disable_blockprotect_at25fs010(struct flashctx *flash);
-int spi_disable_blockprotect_at25fs040(struct flashctx *flash);
-int spi_prettyprint_status_register_en25s_wp(struct flashctx *flash);
-int spi_prettyprint_status_register_n25q(struct flashctx *flash);
-int spi_disable_blockprotect_n25q(struct flashctx *flash);
-int spi_prettyprint_status_register_bp2_ep_srwd(struct flashctx *flash);
-int spi_disable_blockprotect_bp2_ep_srwd(struct flashctx *flash);
-int spi_prettyprint_status_register_sst25(struct flashctx *flash);
-int spi_prettyprint_status_register_sst25vf016(struct flashctx *flash);
-int spi_prettyprint_status_register_sst25vf040b(struct flashctx *flash);
-int spi_disable_blockprotect_sst26_global_unprotect(struct flashctx *flash);
 
 /* sfdp.c */
 int probe_spi_sfdp(struct flashctx *flash);
@@ -135,8 +97,7 @@ int probe_82802ab(struct flashctx *flash);
 int erase_block_82802ab(struct flashctx *flash, unsigned int page, unsigned int pagesize);
 int write_82802ab(struct flashctx *flash, const uint8_t *buf, unsigned int start, unsigned int len);
 void print_status_82802ab(uint8_t status);
-int unlock_28f004s5(struct flashctx *flash);
-int unlock_lh28f008bjt(struct flashctx *flash);
+blockprotect_func_t *lookup_82802ab_blockprotect_func_ptr(const struct flashchip *const chip);
 
 /* jedec.c */
 uint8_t oddparity(uint8_t val);
@@ -150,10 +111,7 @@ int erase_sector_jedec(struct flashctx *flash, unsigned int page, unsigned int p
 int erase_block_jedec(struct flashctx *flash, unsigned int page, unsigned int blocksize);
 int erase_chip_block_jedec(struct flashctx *flash, unsigned int page, unsigned int blocksize);
 
-int unlock_regspace2_uniform_32k(struct flashctx *flash);
-int unlock_regspace2_uniform_64k(struct flashctx *flash);
-int unlock_regspace2_block_eraser_0(struct flashctx *flash);
-int unlock_regspace2_block_eraser_1(struct flashctx *flash);
+blockprotect_func_t *lookup_jedec_blockprotect_func_ptr(const struct flashchip *const chip);
 int printlock_regspace2_uniform_64k(struct flashctx *flash);
 int printlock_regspace2_block_eraser_0(struct flashctx *flash);
 int printlock_regspace2_block_eraser_1(struct flashctx *flash);

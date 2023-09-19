@@ -75,6 +75,10 @@ struct emu_data {
 
 	unsigned int spi_write_256_chunksize;
 	uint8_t *flashchip_contents;
+
+	/* An instance of this structure is shared between multiple masters, so
+	 * store the number of references to clean up only once at shutdown time. */
+	uint8_t refs_cnt;
 };
 
 /* A legit complete SFDP table based on the MX25L6436E (rev. 1.8) datasheet. */
@@ -211,7 +215,7 @@ static void dummy_chip_writew(const struct flashctx *flash, uint16_t val, chipad
 
 static void dummy_chip_writel(const struct flashctx *flash, uint32_t val, chipaddr addr)
 {
-	msg_pspew("%s: addr=0x%" PRIxPTR ", val=0x%08x\n", __func__, addr, val);
+	msg_pspew("%s: addr=0x%" PRIxPTR ", val=0x%08"PRIx32"\n", __func__, addr, val);
 }
 
 static void dummy_chip_writen(const struct flashctx *flash, const uint8_t *buf, chipaddr addr, size_t len)
@@ -905,6 +909,11 @@ static int dummy_shutdown(void *data)
 {
 	msg_pspew("%s\n", __func__);
 	struct emu_data *emu_data = (struct emu_data *)data;
+
+	emu_data->refs_cnt--;
+	if (emu_data->refs_cnt != 0)
+		return 0;
+
 	if (emu_data->emu_chip != EMULATE_NONE) {
 		if (emu_data->emu_persistent_image && emu_data->emu_modified) {
 			msg_pdbg("Writing %s\n", emu_data->emu_persistent_image);
@@ -923,6 +932,33 @@ static void dummy_nop_delay(const struct flashctx *flash, unsigned int usecs)
 {
 }
 
+static enum flashrom_wp_result dummy_wp_read_cfg(struct flashrom_wp_cfg *cfg, struct flashctx *flash)
+{
+	cfg->mode = FLASHROM_WP_MODE_DISABLED;
+	cfg->range.start = 0;
+	cfg->range.len = 0;
+
+	return FLASHROM_WP_OK;
+}
+
+static enum flashrom_wp_result dummy_wp_write_cfg(struct flashctx *flash, const struct flashrom_wp_cfg *cfg)
+{
+	if (cfg->mode != FLASHROM_WP_MODE_DISABLED)
+		return FLASHROM_WP_ERR_MODE_UNSUPPORTED;
+
+	if (cfg->range.start != 0 || cfg->range.len != 0)
+		return FLASHROM_WP_ERR_RANGE_UNSUPPORTED;
+
+	return FLASHROM_WP_OK;
+}
+
+static enum flashrom_wp_result dummy_wp_get_available_ranges(struct flashrom_wp_ranges **list, struct flashctx *flash)
+{
+	/* Not supported */
+	return FLASHROM_WP_ERR_RANGE_LIST_UNAVAILABLE;
+}
+
+
 static const struct spi_master spi_master_dummyflasher = {
 	.map_flash_region	= dummy_map,
 	.unmap_flash_region	= dummy_unmap,
@@ -930,9 +966,9 @@ static const struct spi_master spi_master_dummyflasher = {
 	.max_data_read	= MAX_DATA_READ_UNLIMITED,
 	.max_data_write	= MAX_DATA_UNSPECIFIED,
 	.command	= dummy_spi_send_command,
-	.multicommand	= default_spi_send_multicommand,
 	.read		= default_spi_read,
 	.write_256	= dummy_spi_write_256,
+	.shutdown	= dummy_shutdown,
 	.probe_opcode	= dummy_spi_probe_opcode,
 	.delay		= dummy_nop_delay,
 };
@@ -948,15 +984,20 @@ static const struct par_master par_master_dummyflasher = {
 	.chip_writew	= dummy_chip_writew,
 	.chip_writel	= dummy_chip_writel,
 	.chip_writen	= dummy_chip_writen,
+	.shutdown	= dummy_shutdown,
 	.delay		= dummy_nop_delay,
 };
 
 static const struct opaque_master opaque_master_dummyflasher = {
-	.probe	= probe_variable_size,
-	.read	= dummy_opaque_read,
-	.write	= dummy_opaque_write,
-	.erase	= dummy_opaque_erase,
-	.delay	= dummy_nop_delay,
+	.probe		= probe_variable_size,
+	.read		= dummy_opaque_read,
+	.write		= dummy_opaque_write,
+	.erase		= dummy_opaque_erase,
+	.shutdown	= dummy_shutdown,
+	.delay		= dummy_nop_delay,
+	.wp_read_cfg	= dummy_wp_read_cfg,
+	.wp_write_cfg	= dummy_wp_write_cfg,
+	.wp_get_ranges	= dummy_wp_get_available_ranges,
 };
 
 static int init_data(const struct programmer_cfg *cfg,
@@ -1410,21 +1451,20 @@ static int dummy_init(const struct programmer_cfg *cfg)
 	}
 
 dummy_init_out:
-	if (register_shutdown(dummy_shutdown, data)) {
-		free(data->emu_persistent_image);
-		free(data->flashchip_contents);
-		free(data);
-		return 1;
-	}
-
-	if (dummy_buses_supported & BUS_PROG)
+	if (dummy_buses_supported & BUS_PROG) {
+		data->refs_cnt++;
 		ret |= register_opaque_master(&opaque_master_dummyflasher, data);
-	if (dummy_buses_supported & BUS_NONSPI)
+	}
+	if ((dummy_buses_supported & BUS_NONSPI) && !ret) {
+		data->refs_cnt++;
 		ret |= register_par_master(&par_master_dummyflasher,
 					   dummy_buses_supported & BUS_NONSPI,
 					   data);
-	if (dummy_buses_supported & BUS_SPI)
+	}
+	if ((dummy_buses_supported & BUS_SPI) && !ret) {
+		data->refs_cnt++;
 		ret |= register_spi_master(&spi_master_dummyflasher, data);
+	}
 
 	return ret;
 }

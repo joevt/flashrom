@@ -116,7 +116,7 @@ static int nicintel_ee_probe_i210(struct flashctx *flash)
 	flash->chip->total_size = 4;
 	flash->chip->page_size = flash->chip->total_size * 1024;
 	flash->chip->tested = TEST_OK_PREWB;
-	flash->chip->gran = write_gran_1byte_implicit_erase;
+	flash->chip->gran = WRITE_GRAN_1BYTE_IMPLICIT_ERASE;
 	flash->chip->block_erasers->eraseblocks[0].size = flash->chip->page_size;
 	flash->chip->block_erasers->eraseblocks[0].count = 1;
 
@@ -140,14 +140,14 @@ static int nicintel_ee_probe_82580(struct flashctx *flash)
 			flash->chip->total_size = 32;
 			break;
 		default:
-			msg_cerr("Unsupported chip size 0x%x\n", tmp);
+			msg_cerr("Unsupported chip size 0x%"PRIx32"\n", tmp);
 			return 0;
 		}
 	}
 
 	flash->chip->page_size = EE_PAGE_MASK + 1;
 	flash->chip->tested = TEST_OK_PREWB;
-	flash->chip->gran = write_gran_1byte_implicit_erase;
+	flash->chip->gran = WRITE_GRAN_1BYTE_IMPLICIT_ERASE;
 	flash->chip->block_erasers->eraseblocks[0].size = (EE_PAGE_MASK + 1);
 	flash->chip->block_erasers->eraseblocks[0].count = (flash->chip->total_size * 1024) / (EE_PAGE_MASK + 1);
 

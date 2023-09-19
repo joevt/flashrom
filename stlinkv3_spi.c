@@ -466,11 +466,9 @@ static const struct spi_master spi_programmer_stlinkv3 = {
 	.max_data_read	= UINT16_MAX,
 	.max_data_write	= UINT16_MAX,
 	.command	= stlinkv3_spi_transmit,
-	.multicommand	= default_spi_send_multicommand,
 	.read		= default_spi_read,
 	.write_256	= default_spi_write_256,
 	.shutdown	= stlinkv3_spi_shutdown,
-	.probe_opcode	= default_spi_probe_opcode,
 };
 
 static int stlinkv3_spi_init(const struct programmer_cfg *cfg)

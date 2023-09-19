@@ -26,20 +26,7 @@
 #include "programmer.h"
 #include "spi.h"
 
-int spi_send_command(const struct flashctx *flash, unsigned int writecnt,
-		     unsigned int readcnt, const unsigned char *writearr,
-		     unsigned char *readarr)
-{
-	return flash->mst->spi.command(flash, writecnt, readcnt, writearr,
-				       readarr);
-}
-
-int spi_send_multicommand(const struct flashctx *flash, struct spi_command *cmds)
-{
-	return flash->mst->spi.multicommand(flash, cmds);
-}
-
-int default_spi_send_command(const struct flashctx *flash, unsigned int writecnt,
+static int default_spi_send_command(const struct flashctx *flash, unsigned int writecnt,
 			     unsigned int readcnt,
 			     const unsigned char *writearr,
 			     unsigned char *readarr)
@@ -60,7 +47,7 @@ int default_spi_send_command(const struct flashctx *flash, unsigned int writecnt
 	return spi_send_multicommand(flash, cmd);
 }
 
-int default_spi_send_multicommand(const struct flashctx *flash,
+static int default_spi_send_multicommand(const struct flashctx *flash,
 				  struct spi_command *cmds)
 {
 	int result = 0;
@@ -69,6 +56,22 @@ int default_spi_send_multicommand(const struct flashctx *flash,
 					  cmds->writearr, cmds->readarr);
 	}
 	return result;
+}
+
+int spi_send_command(const struct flashctx *flash, unsigned int writecnt,
+		     unsigned int readcnt, const unsigned char *writearr,
+		     unsigned char *readarr)
+{
+	if (flash->mst->spi.command)
+		return flash->mst->spi.command(flash, writecnt, readcnt, writearr, readarr);
+	return default_spi_send_command(flash, writecnt, readcnt, writearr, readarr);
+}
+
+int spi_send_multicommand(const struct flashctx *flash, struct spi_command *cmds)
+{
+	if (flash->mst->spi.multicommand)
+		return flash->mst->spi.multicommand(flash, cmds);
+	return default_spi_send_multicommand(flash, cmds);
 }
 
 int default_spi_read(struct flashctx *flash, uint8_t *buf, unsigned int start,
@@ -136,9 +139,11 @@ int spi_aai_write(struct flashctx *flash, const uint8_t *buf, unsigned int start
 	return default_spi_write_aai(flash, buf, start, len);
 }
 
-bool default_spi_probe_opcode(const struct flashctx *flash, uint8_t opcode)
+bool spi_probe_opcode(const struct flashctx *flash, uint8_t opcode)
 {
-	return true;
+	if (!flash->mst->spi.probe_opcode)
+		return true; /* no probe_opcode implies default of supported. */
+	return flash->mst->spi.probe_opcode(flash, opcode);
 }
 
 int register_spi_master(const struct spi_master *mst, void *data)
@@ -153,10 +158,7 @@ int register_spi_master(const struct spi_master *mst, void *data)
 		}
 	}
 
-	if (!mst->write_256 || !mst->read || !mst->command ||
-	    !mst->multicommand || !mst->probe_opcode ||
-	    ((mst->command == default_spi_send_command) &&
-	     (mst->multicommand == default_spi_send_multicommand))) {
+	if (!mst->write_256 || !mst->read || (!mst->command && !mst->multicommand)) {
 		msg_perr("%s called with incomplete master definition. "
 			 "Please report a bug at flashrom@flashrom.org\n",
 			 __func__);

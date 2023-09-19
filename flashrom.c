@@ -21,6 +21,7 @@
 
 #include <stdbool.h>
 #include <stdio.h>
+#include <stdint.h>
 #include <sys/types.h>
 #include <string.h>
 #include <unistd.h>
@@ -35,7 +36,7 @@
 #include "chipdrivers.h"
 #include "erasure_layout.h"
 
-static bool use_legacy_erase_path = true;
+static bool use_legacy_erase_path = false;
 
 const char flashrom_version[] = FLASHROM_VERSION;
 
@@ -48,7 +49,7 @@ static const struct programmer_entry *programmer = NULL;
 struct decode_sizes max_rom_decode;
 
 /* If nonzero, used as the start address of bottom-aligned flash. */
-unsigned long flashbase;
+uintptr_t flashbase;
 
 /* Is writing allowed with this programmer? */
 bool programmer_may_write;
@@ -65,8 +66,15 @@ static struct shutdown_func_data {
  */
 static bool may_register_shutdown = false;
 
-struct programmer_cfg {
-	char *params;
+static struct bus_type_info {
+	enum chipbustype type;
+	const char *name;
+} bustypes[] = {
+	{ BUS_PARALLEL, "Parallel, " },
+	{ BUS_LPC, "LPC, " },
+	{ BUS_FWH, "FWH, " },
+	{ BUS_SPI, "SPI, " },
+	{ BUS_PROG, "Programmer-specific, " },
 };
 
 /* Register a function to be executed on programmer shutdown.
@@ -385,7 +393,7 @@ int check_for_unwritable_regions(const struct flashctx *flash, unsigned int star
 		get_flash_region(flash, addr, &region);
 
 		if (region.write_prot) {
-			msg_gerr("%s: cannot write/erase inside %s region (%#08x..%#08x).\n",
+			msg_gerr("%s: cannot write/erase inside %s region (%#08"PRIx32"..%#08"PRIx32").\n",
 				 __func__, region.name, region.start, region.end - 1);
 			free(region.name);
 			return -1;
@@ -470,9 +478,9 @@ int check_block_eraser(const struct flashctx *flash, int k, int log)
 
 	if (flash->mst->buses_supported & BUS_SPI) {
 		const uint8_t *opcode = spi_get_opcode_from_erasefn(eraser.block_erase);
-		int i;
+        int i;
 		for (i = 0; opcode[i]; i++) {
-			if (!flash->mst->spi.probe_opcode(flash, opcode[i])) {
+			if (!spi_probe_opcode(flash, opcode[i])) {
 				if (log)
 					msg_cdbg("block erase function and layout found "
 						 "but SPI master doesn't support the function. ");
@@ -583,7 +591,7 @@ int read_flash(struct flashctx *flash, uint8_t *buf, unsigned int start, unsigne
 
 		if (region.read_prot) {
 			if (flash->flags.skip_unreadable_regions) {
-				msg_gdbg("%s: cannot read inside %s region (%#08x..%#08x), "
+				msg_gdbg("%s: cannot read inside %s region (%#08"PRIx32"..%#08"PRIx32"), "
 					 "filling (%#08x..%#08x) with erased value instead.\n",
 					 __func__, region.name, region.start, region.end - 1,
 					 addr, addr + read_len - 1);
@@ -593,12 +601,12 @@ int read_flash(struct flashctx *flash, uint8_t *buf, unsigned int start, unsigne
 				continue;
 			}
 
-			msg_gerr("%s: cannot read inside %s region (%#08x..%#08x).\n",
+			msg_gerr("%s: cannot read inside %s region (%#08"PRIx32"..%#08"PRIx32").\n",
 				 __func__, region.name, region.start, region.end - 1);
 			free(region.name);
 			return -1;
 		}
-		msg_gdbg("%s: %s region (%#08x..%#08x) is readable, reading range (%#08x..%#08x).\n",
+		msg_gdbg("%s: %s region (%#08"PRIx32"..%#08"PRIx32") is readable, reading range (%#08x..%#08x).\n",
 			 __func__, region.name, region.start, region.end - 1, addr, addr + read_len - 1);
 		free(region.name);
 
@@ -652,20 +660,20 @@ int verify_range(struct flashctx *flash, const uint8_t *cmpbuf, unsigned int sta
 
 		if ((region.write_prot && flash->flags.skip_unwritable_regions) ||
 		    (region.read_prot  && flash->flags.skip_unreadable_regions)) {
-			msg_gdbg("%s: Skipping verification of %s region (%#08x..%#08x)\n",
+			msg_gdbg("%s: Skipping verification of %s region (%#08"PRIx32"..%#08"PRIx32")\n",
 				 __func__, region.name, region.start, region.end - 1);
 			free(region.name);
 			continue;
 		}
 
 		if (region.read_prot) {
-			msg_gerr("%s: Verification imposible because %s region (%#08x..%#08x) is unreadable.\n",
+			msg_gerr("%s: Verification imposible because %s region (%#08"PRIx32"..%#08"PRIx32") is unreadable.\n",
 				 __func__, region.name, region.start, region.end - 1);
 			free(region.name);
 			goto out_free;
 		}
 
-		msg_gdbg("%s: Verifying %s region (%#08x..%#08x)\n",
+		msg_gdbg("%s: Verifying %s region (%#08"PRIx32"..%#08"PRIx32")\n",
 			 __func__, region.name, region.start, region.end - 1);
 		free(region.name);
 
@@ -727,42 +735,42 @@ int need_erase(const uint8_t *have, const uint8_t *want, unsigned int len,
 	unsigned int i;
 
 	switch (gran) {
-	case write_gran_1bit:
+	case WRITE_GRAN_1BIT:
 		for (i = 0; i < len; i++)
 			if ((have[i] & want[i]) != want[i]) {
 				result = 1;
 				break;
 			}
 		break;
-	case write_gran_1byte:
+	case WRITE_GRAN_1BYTE:
 		for (i = 0; i < len; i++)
 			if ((have[i] != want[i]) && (have[i] != erased_value)) {
 				result = 1;
 				break;
 			}
 		break;
-	case write_gran_128bytes:
+	case WRITE_GRAN_128BYTES:
 		result = need_erase_gran_bytes(have, want, len, 128, erased_value);
 		break;
-	case write_gran_256bytes:
+	case WRITE_GRAN_256BYTES:
 		result = need_erase_gran_bytes(have, want, len, 256, erased_value);
 		break;
-	case write_gran_264bytes:
+	case WRITE_GRAN_264BYTES:
 		result = need_erase_gran_bytes(have, want, len, 264, erased_value);
 		break;
-	case write_gran_512bytes:
+	case WRITE_GRAN_512BYTES:
 		result = need_erase_gran_bytes(have, want, len, 512, erased_value);
 		break;
-	case write_gran_528bytes:
+	case WRITE_GRAN_528BYTES:
 		result = need_erase_gran_bytes(have, want, len, 528, erased_value);
 		break;
-	case write_gran_1024bytes:
+	case WRITE_GRAN_1024BYTES:
 		result = need_erase_gran_bytes(have, want, len, 1024, erased_value);
 		break;
-	case write_gran_1056bytes:
+	case WRITE_GRAN_1056BYTES:
 		result = need_erase_gran_bytes(have, want, len, 1056, erased_value);
 		break;
-	case write_gran_1byte_implicit_erase:
+	case WRITE_GRAN_1BYTE_IMPLICIT_ERASE:
 		/* Do not erase, handle content changes from anything->0xff by writing 0xff. */
 		result = 0;
 		break;
@@ -805,30 +813,30 @@ unsigned int get_next_write(const uint8_t *have, const uint8_t *want, unsigned i
 	unsigned int i, limit, stride;
 
 	switch (gran) {
-	case write_gran_1bit:
-	case write_gran_1byte:
-	case write_gran_1byte_implicit_erase:
+	case WRITE_GRAN_1BIT:
+	case WRITE_GRAN_1BYTE:
+	case WRITE_GRAN_1BYTE_IMPLICIT_ERASE:
 		stride = 1;
 		break;
-	case write_gran_128bytes:
+	case WRITE_GRAN_128BYTES:
 		stride = 128;
 		break;
-	case write_gran_256bytes:
+	case WRITE_GRAN_256BYTES:
 		stride = 256;
 		break;
-	case write_gran_264bytes:
+	case WRITE_GRAN_264BYTES:
 		stride = 264;
 		break;
-	case write_gran_512bytes:
+	case WRITE_GRAN_512BYTES:
 		stride = 512;
 		break;
-	case write_gran_528bytes:
+	case WRITE_GRAN_528BYTES:
 		stride = 528;
 		break;
-	case write_gran_1024bytes:
+	case WRITE_GRAN_1024BYTES:
 		stride = 1024;
 		break;
-	case write_gran_1056bytes:
+	case WRITE_GRAN_1056BYTES:
 		stride = 1056;
 		break;
 	default:
@@ -920,35 +928,44 @@ int map_flash(struct flashctx *flash)
 
 /*
  * Return a string corresponding to the bustype parameter.
- * Memory is obtained with malloc() and must be freed with free() by the caller.
+ * Memory to store the string is allocated. The caller is responsible to free memory.
+ * If there is not enough memory remaining, then NULL is returned.
  */
 char *flashbuses_to_text(enum chipbustype bustype)
 {
-	char *ret = calloc(1, 1);
+	char *ret, *ptr;
+
 	/*
 	 * FIXME: Once all chipsets and flash chips have been updated, NONSPI
 	 * will cease to exist and should be eliminated here as well.
 	 */
-	if (bustype == BUS_NONSPI) {
-		ret = strcat_realloc(ret, "Non-SPI, ");
-	} else {
-		if (bustype & BUS_PARALLEL)
-			ret = strcat_realloc(ret, "Parallel, ");
-		if (bustype & BUS_LPC)
-			ret = strcat_realloc(ret, "LPC, ");
-		if (bustype & BUS_FWH)
-			ret = strcat_realloc(ret, "FWH, ");
-		if (bustype & BUS_SPI)
-			ret = strcat_realloc(ret, "SPI, ");
-		if (bustype & BUS_PROG)
-			ret = strcat_realloc(ret, "Programmer-specific, ");
+	if (bustype == BUS_NONSPI)
+		return strdup("Non-SPI");
 		if (bustype == BUS_NONE)
-			ret = strcat_realloc(ret, "None, ");
+		return strdup("None");
+
+	ret = calloc(1, 1);
+	if (!ret)
+		return NULL;
+
+	for (unsigned int i = 0; i < ARRAY_SIZE(bustypes); i++)
+	{
+		if (bustype & bustypes[i].type) {
+			ptr = strcat_realloc(ret, bustypes[i].name);
+			if (!ptr) {
+				free(ret);
+				return NULL;
+			}
+			ret = ptr;
+		}
 	}
+
 	/* Kill last comma. */
 	ret[strlen(ret) - 2] = '\0';
-	ret = realloc(ret, strlen(ret) + 1);
-	return ret;
+	ptr = realloc(ret, strlen(ret) + 1);
+	if (!ptr)
+		free(ret);
+	return ptr;
 }
 
 static int init_default_layout(struct flashctx *flash)
@@ -1021,13 +1038,13 @@ int write_flash(struct flashctx *flash, const uint8_t *buf,
 		const uint8_t *rbuf = buf + addr - start;
 
 		if (region.write_prot) {
-			msg_gdbg("%s: cannot write inside %s region (%#08x..%#08x), skipping (%#08x..%#08x).\n",
+			msg_gdbg("%s: cannot write inside %s region (%#08"PRIx32"..%#08"PRIx32"), skipping (%#08x..%#08x).\n",
 				 __func__, region.name, region.start, region.end - 1, addr, addr + write_len - 1);
 			free(region.name);
 			continue;
 		}
 
-		msg_gdbg("%s: %s region (%#08x..%#08x) is writable, writing range (%#08x..%#08x).\n",
+		msg_gdbg("%s: %s region (%#08"PRIx32"..%#08"PRIx32") is writable, writing range (%#08x..%#08x).\n",
 			 __func__, region.name, region.start, region.end - 1, addr, addr + write_len - 1);
 
 		write_func_t *write_func = lookup_write_func_ptr(flash->chip);
@@ -1174,7 +1191,7 @@ notfound:
 
 	tmp = flashbuses_to_text(flash->chip->bustype);
 	msg_cinfo("%s %s flash chip \"%s\" (%d kB, %s) ", force ? "Assuming" : "Found",
-		  flash->chip->vendor, flash->chip->name, flash->chip->total_size, tmp);
+		  flash->chip->vendor, flash->chip->name, flash->chip->total_size, tmp ? tmp : "?");
 	free(tmp);
 	if (master_uses_physmap(mst))
 		msg_cinfo("mapped at physical address 0x%0*" PRIxPTR ".\n",
@@ -1184,9 +1201,11 @@ notfound:
 
 	/* Flash registers may more likely not be mapped if the chip was forced.
 	 * Lock info may be stored in registers, so avoid lock info printing. */
-	if (!force)
-		if (flash->chip->printlock)
-			flash->chip->printlock(flash);
+	if (!force) {
+		printlockfunc_t *printlock = lookup_printlock_func_ptr(flash);
+		if (printlock)
+			printlock(flash);
+	}
 
 	/* Get out of the way for later runs. */
 	unmap_flash(flash);
@@ -1351,7 +1370,7 @@ static int walk_eraseblocks(struct flashctx *const flashctx,
 				first = false;
 			else
 				msg_cdbg(", ");
-			msg_cdbg("0x%06x-0x%06x:", info->erase_start, info->erase_end);
+			msg_cdbg("0x%06"PRIx32"-0x%06"PRIx32":", info->erase_start, info->erase_end);
 
 			erasefunc_t *erase_func = lookup_erase_func_ptr(eraser);
 			ret = per_blockfn(flashctx, info, erase_func, all_skipped);
@@ -1484,13 +1503,13 @@ static int erase_block(struct flashctx *const flashctx,
 		len = min(info->erase_start + erase_len, region.end) - addr;
 
 		if (region.write_prot) {
-			msg_gdbg("%s: cannot erase inside %s region (%#08x..%#08x), skipping range (%#08x..%#08x).\n",
+			msg_gdbg("%s: cannot erase inside %s region (%#08"PRIx32"..%#08"PRIx32"), skipping range (%#08x..%#08x).\n",
 				 __func__, region.name, region.start, region.end - 1, addr, addr + len - 1);
 			free(region.name);
 			continue;
 		}
 
-		msg_gdbg("%s: %s region (%#08x..%#08x) is writable, erasing range (%#08x..%#08x).\n",
+		msg_gdbg("%s: %s region (%#08"PRIx32"..%#08"PRIx32") is writable, erasing range (%#08x..%#08x).\n",
 			 __func__, region.name, region.start, region.end - 1, addr, addr + len - 1);
 		free(region.name);
 
@@ -2040,24 +2059,49 @@ static int save_initial_flash_wp(struct flashctx *const flash)
 	return 0;
 }
 
-static int unlock_flash_wp(struct flashctx *const flash)
+static int unlock_flash_wp(struct flashctx *const flash,
+			   const bool write_it, const bool erase_it)
+
 {
-	/* Save original WP state to be restored later */
-	if (save_initial_flash_wp(flash))
+	int ret = 0;
+
+	/* WP only disables write protection, so only use WP to unlock
+	 * for write/erase operations.
+	 *
+	 * For read/verify operations, we still call the chip's unlock
+	 * function, which may disable read locks if the chip has them.
+	 */
+	if (!write_it && !erase_it) {
+		msg_cdbg("Skipping writeprotect-based unlocking for read/verify operations.\n");
 		return -1;
+	}
+
+	/* Save original WP state to be restored later */
+	if (save_initial_flash_wp(flash)) {
+		ret = -1;
+		goto warn_out;
+	}
 
 	/* Disable WP */
 	struct flashrom_wp_cfg *unlocked_wp_cfg;
-	if (flashrom_wp_cfg_new(&unlocked_wp_cfg) != FLASHROM_WP_OK)
-		return -1;
+	if (flashrom_wp_cfg_new(&unlocked_wp_cfg) != FLASHROM_WP_OK) {
+		ret = -1;
+		goto warn_out;
+	}
 
 	flashrom_wp_set_range(unlocked_wp_cfg, 0, 0);
 	flashrom_wp_set_mode(unlocked_wp_cfg, FLASHROM_WP_MODE_DISABLED);
-	enum flashrom_wp_result ret = flashrom_wp_write_cfg(flash, unlocked_wp_cfg);
+	if (flashrom_wp_write_cfg(flash, unlocked_wp_cfg) != FLASHROM_WP_OK) {
+		ret = -1;
+	}
 
 	flashrom_wp_cfg_release(unlocked_wp_cfg);
 
-	return (ret == FLASHROM_WP_OK) ? 0 : -1;
+warn_out:
+	if (ret)
+		msg_cerr("Failed to unlock flash status reg with wp support.\n");
+
+	return ret;
 }
 
 int prepare_flash_access(struct flashctx *const flash,
@@ -2080,16 +2124,22 @@ int prepare_flash_access(struct flashctx *const flash,
 	/* Initialize chip_restore_fn_count before chip unlock calls. */
 	flash->chip_restore_fn_count = 0;
 
-	/* Given the existence of read locks, we want to unlock for read, erase and write. */
 	int ret = 1;
-	if (flash->chip->decode_range != NO_DECODE_RANGE_FUNC) {
-		ret = unlock_flash_wp(flash);
-		if (ret)
-			msg_cerr("Failed to unlock flash status reg with wp support.\n");
+	if (flash->chip->decode_range != NO_DECODE_RANGE_FUNC ||
+	   (flash->mst->buses_supported & BUS_PROG && flash->mst->opaque.wp_write_cfg)) {
+		ret = unlock_flash_wp(flash, write_it, erase_it);
 	}
-	if (ret && flash->chip->unlock) {
-		flash->chip->unlock(flash);
-	}
+	/*
+	 * Fall back to chip unlock function if we haven't already successfully
+	 * unlocked using WP (e.g. WP unlocking failed, chip had no WP support,
+	 * WP was skipped for read/verify ops).
+	 *
+	 * Given the existence of read locks, we want to unlock for read,
+	 * erase, write, and verify.
+	 */
+	blockprotect_func_t *bp_func = lookup_blockprotect_func_ptr(flash->chip);
+	if (ret && bp_func)
+		bp_func(flash);
 
 	flash->address_high_byte = -1;
 	flash->in_4ba_mode = false;

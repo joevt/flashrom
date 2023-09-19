@@ -24,8 +24,6 @@
  * Contains the chipset specific flash enables.
  */
 
-#define _LARGEFILE64_SOURCE
-
 #include <stdbool.h>
 #include <stdlib.h>
 #include <string.h>
@@ -550,7 +548,7 @@ idsel_garbage_out:
 		}
 	}
 	max_rom_decode.fwh = min(max_decode_fwh_idsel, max_decode_fwh_decode);
-	msg_pdbg("Maximum FWH chip size: 0x%x bytes\n", max_rom_decode.fwh);
+	msg_pdbg("Maximum FWH chip size: 0x%"PRIx32" bytes\n", max_rom_decode.fwh);
 
 	return 0;
 }
@@ -625,7 +623,7 @@ static enum chipbustype enable_flash_ich_report_gcs(
 		break;
 	}
 
-	msg_pdbg("%s = 0x%x: ", reg_name, gcs);
+	msg_pdbg("%s = 0x%"PRIx32": ", reg_name, gcs);
 	msg_pdbg("BIOS Interface Lock-Down: %sabled, ", bild ? "en" : "dis");
 
 	struct boot_straps {
@@ -774,7 +772,7 @@ static int enable_flash_ich_spi(const struct programmer_cfg *cfg, struct pci_dev
 {
 	/* Get physical address of Root Complex Register Block */
 	uint32_t rcra = pci_read_long(dev, 0xf0) & 0xffffc000;
-	msg_pdbg("Root Complex Register Block address = 0x%x\n", rcra);
+	msg_pdbg("Root Complex Register Block address = 0x%"PRIx32"\n", rcra);
 
 	/* Map RCBA to virtual memory */
 	void *rcrb = rphysmap("ICH RCRB", rcra, 0x4000);
@@ -826,7 +824,7 @@ static int enable_flash_ich_spi(const struct programmer_cfg *cfg, struct pci_dev
 
 	/* Suppress unknown laptop warning if we booted from SPI. */
 	if (boot_buses & BUS_SPI)
-		laptop_ok = true;
+		cfg->bcfg->laptop_ok = true;
 
 	return 0;
 }
@@ -958,7 +956,7 @@ static int enable_flash_pch100_or_c620(const struct programmer_cfg *cfg,
 	void *const spibar = rphysmap("SPIBAR", phys_spibar, 0x1000);
 	if (spibar == ERROR_PTR)
 		goto _freepci_ret;
-	msg_pdbg("SPIBAR = 0x%0*" PRIxPTR " (phys = 0x%08x)\n", PRIxPTR_WIDTH, (uintptr_t)spibar, phys_spibar);
+	msg_pdbg("SPIBAR = 0x%0*" PRIxPTR " (phys = 0x%08"PRIx32")\n", PRIxPTR_WIDTH, (uintptr_t)spibar, phys_spibar);
 
 	/* This adds BUS_SPI */
 	const int ret_spi = ich_init_spi(cfg, spibar, pch_generation);
@@ -971,7 +969,7 @@ static int enable_flash_pch100_or_c620(const struct programmer_cfg *cfg,
 
 	/* Suppress unknown laptop warning if we booted from SPI. */
 	if (!ret && (boot_buses & BUS_SPI))
-		laptop_ok = true;
+		cfg->bcfg->laptop_ok = true;
 
 _freepci_ret:
 	pci_free_dev(spi_dev);
@@ -1050,7 +1048,7 @@ static int enable_flash_silvermont(const struct programmer_cfg *cfg, struct pci_
 
 	/* Get physical address of Root Complex Register Block */
 	uint32_t rcba = pci_read_long(dev, 0xf0) & 0xfffffc00;
-	msg_pdbg("Root Complex Register Block address = 0x%x\n", rcba);
+	msg_pdbg("Root Complex Register Block address = 0x%"PRIx32"\n", rcba);
 
 	/* Handle GCS (in RCRB) */
 	void *rcrb = physmap("BYT RCRB", rcba, 4);
@@ -1068,7 +1066,7 @@ static int enable_flash_silvermont(const struct programmer_cfg *cfg, struct pci_
 
 	/* Get physical address of SPI Base Address and map it */
 	uint32_t sbase = pci_read_long(dev, 0x54) & 0xfffffe00;
-	msg_pdbg("SPI_BASE_ADDRESS = 0x%x\n", sbase);
+	msg_pdbg("SPI_BASE_ADDRESS = 0x%"PRIx32"\n", sbase);
 	void *spibar = rphysmap("BYT SBASE", sbase, 512); /* Last defined address on Bay Trail is 0x100 */
 	if (spibar == ERROR_PTR)
 		return ERROR_FLASHROM_FATAL;
@@ -1087,7 +1085,7 @@ static int enable_flash_silvermont(const struct programmer_cfg *cfg, struct pci_
 
 	/* Suppress unknown laptop warning if we booted from SPI. */
 	if (boot_buses & BUS_SPI)
-		laptop_ok = true;
+		cfg->bcfg->laptop_ok = true;
 
 	return 0;
 }
@@ -1387,7 +1385,7 @@ static int enable_flash_sb600(const struct programmer_cfg *cfg, struct pci_dev *
 		/* No protection flags for this region?*/
 		if ((prot & 0x3) == 0)
 			continue;
-		msg_pdbg("Chipset %s%sprotected flash from 0x%08x to 0x%08x, unlocking...",
+		msg_pdbg("Chipset %s%sprotected flash from 0x%08"PRIx32" to 0x%08"PRIx32", unlocking...",
 			  (prot & 0x2) ? "read " : "",
 			  (prot & 0x1) ? "write " : "",
 			  (prot & 0xfffff800),
@@ -1396,7 +1394,7 @@ static int enable_flash_sb600(const struct programmer_cfg *cfg, struct pci_dev *
 		rpci_write_byte(dev, reg, prot);
 		prot = pci_read_long(dev, reg);
 		if ((prot & 0x3) != 0) {
-			msg_perr("Disabling %s%sprotection of flash addresses from 0x%08x to 0x%08x failed.\n",
+			msg_perr("Disabling %s%sprotection of flash addresses from 0x%08"PRIx32" to 0x%08"PRIx32" failed.\n",
 				 (prot & 0x2) ? "read " : "",
 				 (prot & 0x1) ? "write " : "",
 				 (prot & 0xfffff800),
@@ -1494,7 +1492,7 @@ static int enable_flash_ck804(const struct programmer_cfg *cfg, struct pci_dev *
 
 			segctrl = pci_read_byte(dev, reg);
 			if ((segctrl & 0x3) != 0x0) {
-				msg_pinfo("Could not unlock protection in register 0x%02x (new value: 0x%x).\n",
+				msg_pinfo("Could not unlock protection in register 0x%02x (new value: 0x%"PRIx32").\n",
 					  reg, segctrl);
 				err++;
 			} else
@@ -1518,7 +1516,7 @@ static int enable_flash_ck804(const struct programmer_cfg *cfg, struct pci_dev *
 
 		segctrl = pci_read_long(dev, reg);
 		if ((segctrl & 0x33333333) != 0x00000000) {
-			msg_pinfo("Could not unlock protection in register 0x%02x (new value: 0x%08x).\n",
+			msg_pinfo("Could not unlock protection in register 0x%02x (new value: 0x%08"PRIx32").\n",
 				  reg, segctrl);
 			err++;
 		} else
@@ -1676,7 +1674,7 @@ static int enable_flash_mcp6x_7x(const struct programmer_cfg *cfg, struct pci_de
 
 	/* Suppress unknown laptop warning if we booted from SPI. */
 	if (!ret && want_spi)
-		laptop_ok = true;
+		cfg->bcfg->laptop_ok = true;
 
 	return ret;
 }
@@ -2020,7 +2018,7 @@ const struct penable chipset_enables[] = {
 	{0x8086, 0x8cc2, B_FS,   NT,  "Intel", "9 Series Engineering Sample",	enable_flash_pch9},
 	{0x8086, 0x8cc3, B_FS,   NT,  "Intel", "9 Series",			enable_flash_pch9},
 	{0x8086, 0x8cc4, B_FS,   DEP, "Intel", "Z97",				enable_flash_pch9},
-	{0x8086, 0x8cc6, B_FS,   NT,  "Intel", "H97",				enable_flash_pch9},
+	{0x8086, 0x8cc6, B_FS,   DEP,  "Intel", "H97",				enable_flash_pch9},
 	{0x8086, 0x8d40, B_FS,   NT,  "Intel", "C610/X99 (Wellsburg)",		enable_flash_pch8_wb},
 	{0x8086, 0x8d41, B_FS,   NT,  "Intel", "C610/X99 (Wellsburg)",		enable_flash_pch8_wb},
 	{0x8086, 0x8d42, B_FS,   NT,  "Intel", "C610/X99 (Wellsburg)",		enable_flash_pch8_wb},

@@ -1,5 +1,5 @@
 project('flashromutils', 'c',
-  version : run_command('util/getversion.sh', '--version', check : true).stdout().strip(),
+  version : run_command('cat', 'VERSION', check: true).stdout().strip(),
   license : 'GPL-2.0',
   meson_version : '>=0.53.0',
   default_options : [
@@ -8,14 +8,35 @@ project('flashromutils', 'c',
     'werror=true',
     'optimization=s',
     'debug=false',
+    'default_library=both'
   ],
 )
+
+fs = import('fs')
+
+if get_option('classic_cli').enabled() and get_option('default_library') == 'shared'
+  error('''
+    Cannot build cli_classic with shared libflashrom. Use \'-Dclassic_cli=disabled\' to disable the cli,
+    or use \'--default-library=both\' to also build the classic_cli
+  ''')
+endif
 
 # libtool versioning
 lt_current = '1'
 lt_revision = '0'
 lt_age = '0'
 lt_version = '@0@.@1@.@2@'.format(lt_current, lt_age, lt_revision)
+
+flashrom_version = meson.project_version()
+git = find_program('git', native : true, required : false)
+if git.found()
+  version_git = run_command('git', 'describe', check : false)
+  if version_git.returncode() == 0
+    flashrom_version += ' (git:@0@)'.format(version_git.stdout().strip())
+  endif
+endif
+
+subdir('doc')
 
 # hide/enable some warnings
 warning_flags = [
@@ -37,7 +58,7 @@ add_project_arguments('-D__BSD_VISIBLE', language : 'c') # required for u_char, 
 add_project_arguments('-D__XSI_VISIBLE', language : 'c') # required for gettimeofday() on FreeBSD
 add_project_arguments('-D_NETBSD_SOURCE', language : 'c') # required for indirect include of strings.h on NetBSD
 add_project_arguments('-D_DARWIN_C_SOURCE', language : 'c') # required for indirect include of strings.h on MacOS
-add_project_arguments('-DFLASHROM_VERSION="' + meson.project_version() + '"', language : 'c')
+add_project_arguments('-DFLASHROM_VERSION="' + flashrom_version + '"', language : 'c')
 
 # get defaults from configure
 config_print_wiki= get_option('classic_cli_print_wiki')
@@ -61,6 +82,7 @@ srcs = files(
   'helpers_fileio.c',
   'ich_descriptors.c',
   'jedec.c',
+  'printlock.c',
   'layout.c',
   'libflashrom.c',
   'opaque.c',
@@ -109,8 +131,8 @@ else
   custom_baud_c = 'custom_baud.c'
 endif
 
-systems_hwaccess   = [ 'linux', 'openbsd', 'freebsd', 'dragonfly', 'netbsd' ]
-systems_serial     = [ 'linux', 'openbsd', 'freebsd', 'dragonfly', 'netbsd', 'darwin' ]
+systems_hwaccess   = [ 'linux', 'openbsd', 'freebsd', 'dragonfly', 'netbsd', 'dos' ]
+systems_serial     = [ 'linux', 'openbsd', 'freebsd', 'dragonfly', 'netbsd', 'darwin', 'windows' ]
 
 cpus_port_io = [ 'x86', 'x86_64' ]
 
@@ -123,10 +145,35 @@ group_jlink  = get_option('programmer').contains('group_jlink')
 group_internal = get_option('programmer').contains('group_internal')
 group_external = get_option('programmer').contains('group_external')
 
-libpci     = dependency('libpci', required : group_pci, static : (host_machine.system() == 'openbsd' ? true : false)) # On openbsd a static version of libpci is needed to get also -libz
+libpci     = dependency('libpci', required : group_pci, version : '>=2.2.0',
+  static : (host_machine.system() == 'openbsd' ? true : false)) # On openbsd a static version of libpci is needed to get also -libz
 libusb1    = dependency('libusb-1.0', required : group_usb)
 libftdi1   = dependency('libftdi1', required : group_ftdi)
-libjaylink = dependency('libjaylink', required : group_jlink)
+libjaylink = dependency('libjaylink', required : group_jlink, version : '>=0.3.0')
+
+if host_machine.system() == 'windows'
+  # Specifying an include_path that doesn't exist is an error,
+  # but we only use this if the library is found in the same directory.
+  ni845x_search_path = get_option('ni845x_search_path')
+  if fs.is_dir(ni845x_search_path)
+    ni845x_include_path = [ni845x_search_path]
+  else
+    ni845x_include_path = []
+  endif
+
+  libni845x = declare_dependency(
+    dependencies : [
+      cc.find_library(
+        'ni845x',
+        dirs : get_option('ni845x_search_path'),
+        required : get_option('programmer').contains('ni845x_spi')
+      ),
+    ],
+    include_directories : ni845x_include_path,
+  )
+else
+  libni845x = dependency('', required : false)
+endif
 
 subdir('platform')
 
@@ -155,6 +202,13 @@ linux_headers = \
 #   'active'      : boolean,       # added on runtime
 # }
 programmer = {
+  'asm106x' : {
+    'systems' : systems_hwaccess,
+    'deps'    : [ libpci ],
+    'groups'  : [ group_pci, group_internal ],
+    'srcs'    : files('asm106x.c', 'pcidev.c'),
+    'flags'   : [ '-DCONFIG_ASM106X=1' ],
+  },
   'atahpt' : {
     'systems' : systems_hwaccess,
     'cpu_families' : cpus_port_io,
@@ -192,6 +246,12 @@ programmer = {
     'srcs'    : files('ch341a_spi.c'),
     'test_srcs' : files('tests/ch341a_spi.c'),
     'flags'   : [ '-DCONFIG_CH341A_SPI=1' ],
+  },
+  'ch347_spi' : {
+    'deps'    : [ libusb1 ],
+    'groups'  : [ group_usb, group_external ],
+    'srcs'    : files('ch347_spi.c'),
+    'flags'   : [ '-DCONFIG_CH347_SPI=1' ],
   },
   'dediprog' : {
     'deps'    : [ libusb1 ],
@@ -292,7 +352,6 @@ programmer = {
     'groups'  : [ group_jlink, group_external ],
     'srcs'    : files('jlink_spi.c'),
     'flags'   : [ '-DCONFIG_JLINK_SPI=1' ],
-    'default' : false,
   },
   'linux_mtd' : {
     'systems' : [ 'linux' ],
@@ -335,6 +394,14 @@ programmer = {
     'srcs'    : files('mstarddc_spi.c', 'i2c_helper_linux.c'),
     'flags'   : [ '-DCONFIG_MSTARDDC_SPI=1' ],
     'default' : false
+  },
+  'ni845x_spi' : {
+    'systems' : [ 'windows' ],
+    'cpu_families' : [ 'x86' ], # The required ni845x library is 32-bit only
+    'deps'    : [ libni845x ],
+    'srcs'    : files('ni845x_spi.c'),
+    'flags'   : [ '-DCONFIG_NI845X_SPI=1' ],
+    'default' : false,
   },
   'nic3com' : {
     'systems' : systems_hwaccess,
@@ -494,7 +561,13 @@ foreach p_name, p_data : programmer
 
   if selected_hard
     if not available
-      error(p_name + ' selected but not supported on this platform')
+      error('programmer @0@ was selected but is not supported on this platform (needs @1@/@2@, but system is @3@/@4@)'.format(
+        p_name,
+        p_data.get('systems'),
+        p_data.get('cpu_families'),
+        host_machine.system(),
+        host_machine.cpu_family()
+      ))
     elif not deps_found
       error(p_name + ' selected but dependency ' + not_found_dep +'not found')
     else
@@ -570,7 +643,7 @@ if host_machine.system() == 'darwin'
 else
   vflag = '-Wl,--version-script,@0@/@1@'.format(meson.current_source_dir(), mapfile)
 endif
-libflashrom = both_libraries(
+libflashrom = library(
   'flashrom',
   sources : [
     srcs,
@@ -589,49 +662,37 @@ libflashrom = both_libraries(
   link_depends : mapfile,
 )
 
-version = meson.project_version()
-#strip leading characters
-if version.startswith('v')
-  version = version.split('v')[1]
-endif
-if version.startswith('p')
-  version = version.split('p')[1]
-endif
-
 pkgg = import('pkgconfig')
 pkgg.generate(
   libraries : libflashrom,
-  version : version,
+  version : flashrom_version.split()[0], # cut off the git version
   name : 'flashrom',
   filebase : 'flashrom',
   description : 'library to interact with flashrom',
 )
 
-config_manfile = configuration_data()
-config_manfile.set('VERSION', version)
-config_manfile.set('MAN_DATE', run_command('util/getversion.sh', '--man-date', check : true).stdout().strip())
-configure_file(
-  input : 'flashrom.8.tmpl',
-  output : 'flashrom.8',
-  configuration : config_manfile,
-  install: true,
-  install_dir: join_paths(get_option('mandir'), 'man8'),
-)
+if get_option('classic_cli').enabled() or get_option('classic_cli').auto() and not get_option('default_library') == 'shared'
 
-if get_option('classic_cli').auto() or get_option('classic_cli').enabled()
+  cli_srcs = files(
+    'cli_classic.c',
+    'cli_common.c',
+    'cli_output.c'
+  )
+
+  if not cc.has_function('getopt_long')
+    cli_srcs += files('cli_getopt.c')
+  endif
+
   classic_cli = executable(
     'flashrom',
-    files(
-      'cli_classic.c',
-      'cli_common.c',
-      'cli_output.c',
-    ),
+    cli_srcs,
     c_args : cargs,
     include_directories : include_dir,
     install : true,
     install_dir : get_option('sbindir'),
     link_args : link_args,
-    link_with : libflashrom.get_static_lib(), # flashrom needs internal symbols of libflashrom
+    # flashrom needs internal symbols of libflashrom
+    link_with : get_option('default_library') == 'static' ? libflashrom : libflashrom.get_static_lib(),
   )
   if get_option('llvm_cov').enabled()
     run_target('llvm-cov-cli', command : ['scripts/llvm-cov', classic_cli])

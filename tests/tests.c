@@ -22,6 +22,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdint.h>
+#include <pthread.h>
 
 void *not_null(void)
 {
@@ -101,40 +102,40 @@ static int mock_open(const char *pathname, int flags, mode_t mode)
 int __wrap_open(const char *pathname, int flags, ...)
 {
 	LOG_ME;
-	mode_t mode = 0;
+	int mode = 0;
 	if (flags & O_CREAT) {
 		va_list ap;
 		va_start(ap, flags);
-		mode = va_arg(ap, mode_t);
+		mode = va_arg(ap, int);
 		va_end(ap);
 	}
-	return mock_open(pathname, flags, mode);
+	return mock_open(pathname, flags, (mode_t) mode);
 }
 
 int __wrap_open64(const char *pathname, int flags, ...)
 {
 	LOG_ME;
-	mode_t mode = 0;
+	int mode = 0;
 	if (flags & O_CREAT) {
 		va_list ap;
 		va_start(ap, flags);
-		mode = va_arg(ap, mode_t);
+		mode = va_arg(ap, int);
 		va_end(ap);
 	}
-	return mock_open(pathname, flags, mode);
+	return mock_open(pathname, flags, (mode_t) mode);
 }
 
 int __wrap___open64_2(const char *pathname, int flags, ...)
 {
 	LOG_ME;
-	mode_t mode = 0;
+	int mode = 0;
 	if (flags & O_CREAT) {
 		va_list ap;
 		va_start(ap, flags);
-		mode = va_arg(ap, mode_t);
+		mode = va_arg(ap, int);
 		va_end(ap);
 	}
-	return mock_open(pathname, flags, mode);
+	return mock_open(pathname, flags, (mode_t) mode);
 }
 
 int __wrap_ioctl(int fd, unsigned long int request, ...)
@@ -224,6 +225,12 @@ int __wrap_fstat(int fd, void *buf)
 }
 
 int __wrap_fstat64(int fd, void *buf)
+{
+	LOG_ME;
+	return 0;
+}
+
+int __wrap___fstat50(int fd, void *buf)
 {
 	LOG_ME;
 	return 0;
@@ -379,25 +386,31 @@ unsigned int __wrap_INL(unsigned short port)
 	return 0;
 }
 
+static void *doing_nothing(void *vargp) {
+	return NULL;
+}
+
 int main(int argc, char *argv[])
 {
 	int ret = 0;
-
-#if defined(__FreeBSD__) || defined(__FreeBSD_kernel__)
-	/*
-	 * Pretending to be a multithreaded environment so that `fileno`
-	 * is called as a function (and not as a macro).
-	 * fileno macro in FreeBSD is expanded into inline access of
-	 * private field of file descriptor, which is impossible to mock.
-	 * Calling fileno as a function allows the test to mock it.
-	 */
-	__isthreaded = 1;
-#endif
 
 	if (argc > 1)
 		cmocka_set_test_filter(argv[1]);
 
 	cmocka_set_message_output(CM_OUTPUT_STDOUT);
+
+	/*
+	 * Creating new thread which is doing nothing, to trigger __isthreaded being 1.
+	 * This is a workaround for BSD family. In multi-threaded environment fileno
+	 * macro is expanded into a function which is possible to mock in unit tests.
+	 * Without this workaround, on a single-thread environment, fileno macro is
+	 * expanded into an inline access of a private field of a file descriptor,
+	 * which is impossible to mock.
+	 *
+	 * In other OSes this is just creating a thread which is doing nothing.
+	 */
+	pthread_t thread_id;
+	pthread_create(&thread_id, NULL, doing_nothing, NULL);
 
 	const struct CMUnitTest helpers_tests[] = {
 		cmocka_unit_test(address_to_bits_test_success),
@@ -494,6 +507,7 @@ int main(int argc, char *argv[])
 		cmocka_unit_test(wp_init_from_status_dummyflasher_test_success),
 		cmocka_unit_test(full_chip_erase_with_wp_dummyflasher_test_success),
 		cmocka_unit_test(partial_chip_erase_with_wp_dummyflasher_test_success),
+		cmocka_unit_test(wp_get_register_values_and_masks),
 	};
 	ret |= cmocka_run_group_tests_name("chip_wp.c tests", chip_wp_tests, NULL, NULL);
 

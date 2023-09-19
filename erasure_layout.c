@@ -20,9 +20,9 @@
 #include <limits.h>
 #include <string.h>
 
-#include "include/flash.h"
-#include "include/layout.h"
-#include "include/erasure_layout.h"
+#include "flash.h"
+#include "layout.h"
+#include "erasure_layout.h"
 
 static size_t calculate_block_count(const struct flashchip *chip, size_t eraser_idx)
 {
@@ -95,16 +95,15 @@ int create_erase_layout(struct flashctx *const flashctx, struct erase_layout **e
 {
 	const struct flashchip *chip = flashctx->chip;
 	const size_t erasefn_count = count_usable_erasers(flashctx);
-	struct erase_layout *layout = calloc(erasefn_count, sizeof(struct erase_layout));
-
-	if (!layout) {
-		msg_gerr("Out of memory!\n");
-		return -1;
-	}
-
 	if (!erasefn_count) {
 		msg_gerr("No erase functions supported\n");
 		return 0;
+	}
+
+	struct erase_layout *layout = calloc(erasefn_count, sizeof(struct erase_layout));
+	if (!layout) {
+		msg_gerr("Out of memory!\n");
+		return -1;
 	}
 
 	size_t layout_idx = 0;
@@ -325,7 +324,7 @@ int erase_write(struct flashctx *const flashctx, chipoff_t region_start, chipoff
 
 				if (region.write_prot) {
 					msg_gdbg("%s: cannot erase inside %s "
-						"region (%#08x..%#08x), skipping range (%#08x..%#08x).\n",
+						"region (%#08"PRIx32"..%#08"PRIx32"), skipping range (%#08x..%#08x).\n",
 						 __func__, region.name,
 						 region.start, region.end - 1,
 						 addr, addr + len - 1);
@@ -333,16 +332,19 @@ int erase_write(struct flashctx *const flashctx, chipoff_t region_start, chipoff
 					continue;
 				}
 
-				msg_gdbg("%s: %s region (%#08x..%#08x) is "
+				msg_gdbg("%s: %s region (%#08"PRIx32"..%#08"PRIx32") is "
 					"writable, erasing range (%#08x..%#08x).\n",
 					 __func__, region.name,
 					 region.start, region.end - 1,
 					 addr, addr + len - 1);
 				free(region.name);
 
-				if (erasefn(flashctx, addr, len))
+				if (erasefn(flashctx, addr, len)) {
+					ret = -1;
 					goto _end;
+				}
 				if (check_erased_range(flashctx, addr, len)) {
+					ret = - 1;
 					msg_cerr("ERASE FAILED!\n");
 					goto _end;
 				}
@@ -351,7 +353,7 @@ int erase_write(struct flashctx *const flashctx, chipoff_t region_start, chipoff
 			ret = erasefn(flashctx, start_addr, block_len);
 			if (ret) {
 				msg_cerr("Failed to execute erase command "
-					"for offset %#x to %#x.\n",
+					"for offset %#"PRIx32" to %#"PRIx32".\n",
 					start_addr, start_addr + block_len);
 				ret = -1;
 				goto _end;
@@ -361,11 +363,11 @@ int erase_write(struct flashctx *const flashctx, chipoff_t region_start, chipoff
 			memset(curcontents+start_addr, erased_value, block_len);
 			// after erase make it unselected again
 			erase_layout[i].layout_list[j].selected = false;
-			msg_cdbg("E(%x:%x)", start_addr, start_addr + block_len - 1);
+			msg_cdbg("E(%"PRIx32":%"PRIx32")", start_addr, start_addr + block_len - 1);
 			// verify erase
 			ret = check_erased_range(flashctx, start_addr, block_len);
 			if (ret) {
-				msg_cerr("Verifying flash. Erase failed for range %#x : %#x, Abort.\n",
+				msg_cerr("Verifying flash. Erase failed for range %#"PRIx32" : %#"PRIx32", Abort.\n",
 					start_addr, start_addr + block_len - 1);
 				goto _end;
 			}
@@ -393,14 +395,14 @@ int erase_write(struct flashctx *const flashctx, chipoff_t region_start, chipoff
 		// adjust curcontents
 		memcpy(curcontents + region_start + start_here,
 			newcontents + region_start + start_here, len_here);
-		msg_cdbg("W(%x:%x)", region_start + start_here, region_start + start_here + len_here - 1);
+		msg_cdbg("W(%"PRIx32":%"PRIx32")", region_start + start_here, region_start + start_here + len_here - 1);
 
 		*all_skipped = false;
 	}
 	// verify write
 	ret = verify_range(flashctx, newcontents + region_start, region_start, region_end - region_start);
 	if (ret) {
-		msg_cerr("Verifying flash. Write failed for range %#x : %#x, Abort.\n",
+		msg_cerr("Verifying flash. Write failed for range %#"PRIx32" : %#"PRIx32", Abort.\n",
 			region_start, region_end);
 		goto _end;
 	}
@@ -412,6 +414,6 @@ _end:
 	free(old_start_buf);
 	free(old_end_buf);
 
-	msg_cinfo("Erase/write done from %x to %x\n", region_start, region_end);
+	msg_cinfo("Erase/write done from %"PRIx32" to %"PRIx32"\n", region_start, region_end);
 	return ret;
 }

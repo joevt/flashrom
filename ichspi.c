@@ -448,7 +448,7 @@ static void prettyprint_opcodes(OPCODES *ops)
 		 ops->preop[1]);
 }
 
-#define pprint_reg16(reg, bit, val, sep) msg_pdbg("%s=%"PRId16"" sep, #bit, (val & reg##_##bit) >> reg##_##bit##_OFF)
+#define pprint_reg16(reg, bit, val, sep) msg_pdbg("%s=%"PRId16"" sep, #bit, (int16_t)((val & reg##_##bit) >> reg##_##bit##_OFF))
 #define pprint_reg32(reg, bit, val, sep) msg_pdbg("%s=%"PRId32"" sep, #bit, (val & reg##_##bit) >> reg##_##bit##_OFF)
 
 static void prettyprint_ich9_reg_hsfs(uint16_t reg_val, enum ich_chipset ich_gen)

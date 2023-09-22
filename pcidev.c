@@ -242,8 +242,10 @@ struct pci_dev *pcidev_card_find(uint16_t vendor, uint16_t device,
 	filter.device = device;
 
 	while ((temp = pcidev_scandev(&filter, temp))) {
-		if ((card_vendor == pci_read_word(temp, PCI_SUBSYSTEM_VENDOR_ID))
-		    && (card_device == pci_read_word(temp, PCI_SUBSYSTEM_ID)))
+		if (
+			(card_vendor == pci_read_word(temp, PCI_SUBSYSTEM_VENDOR_ID)) &&
+			(card_device == pci_read_word(temp, PCI_SUBSYSTEM_ID))
+		)
 			return temp;
 	}
 
@@ -349,14 +351,16 @@ struct pci_dev *pcidev_init(const struct programmer_cfg *cfg, const struct dev_e
 			pci_fill_info(dev, PCI_FILL_IDENT);
 			/* Check against list of supported devices. */
 			for (i = 0; devs[i].device_name != NULL; i++)
-				if ((dev->vendor_id == devs[i].vendor_id) &&
-				    (dev->device_id == devs[i].device_id))
+				if (
+					(devs[i].vendor_id == 0xffff || dev->vendor_id == devs[i].vendor_id) &&
+					(devs[i].device_id == 0xffff || dev->device_id == devs[i].device_id)
+				)
 					break;
 			/* Not supported, try the next one. */
 			if (devs[i].device_name == NULL)
 				continue;
 
-			msg_pdbg("Found \"%s %s\" (%04x:%04x, BDF %02x:%02x.%x).\n", devs[i].vendor_name,
+			msg_pinfo("Found \"%s %s\" (%04x:%04x, BDF %02x:%02x.%x).\n", devs[i].vendor_name,
 				 devs[i].device_name, dev->vendor_id, dev->device_id, dev->bus, dev->dev,
 				 dev->func);
 			if (devs[i].status == NT)
@@ -369,7 +373,7 @@ struct pci_dev *pcidev_init(const struct programmer_cfg *cfg, const struct dev_e
 			/* FIXME: We should count all matching devices, not
 			 * just those with a valid BAR.
 			 */
-			if (pcidev_readbar(dev, bar) != 0) {
+			if (bar == -1 || pcidev_readbar(dev, bar) != 0) {
 				found_dev = dev;
 				found++;
 			}

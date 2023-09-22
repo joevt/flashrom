@@ -27,3 +27,7 @@ DirectHW
 build/
 .DS_Store
 .afpDeleted*
+*.xcodeproj/xcuserdata/
+*.xcodeproj/project.xcworkspace
+DerivedData/
+*.xcodeproj/xcshareddata/

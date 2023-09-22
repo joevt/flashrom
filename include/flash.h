@@ -414,6 +414,7 @@ struct flashchip {
 
 	/* Total chip size in kilobytes */
 	unsigned int total_size;
+	unsigned int total_bytes;
 	/* Chip page size in bytes */
 	unsigned int page_size;
 	int feature_bits;

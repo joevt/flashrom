@@ -972,10 +972,11 @@ static int init_default_layout(struct flashctx *flash)
 {
 	/* Fill default layout covering the whole chip. */
 	if (flashrom_layout_new(&flash->default_layout) ||
-	    flashrom_layout_add_region(flash->default_layout,
-			0, flash->chip->total_size * 1024 - 1, "complete flash") ||
-	    flashrom_layout_include_region(flash->default_layout, "complete flash"))
-	        return -1;
+		flashrom_layout_add_region(flash->default_layout,
+			0, (flash->chip->total_bytes ? flash->chip->total_bytes : flash->chip->total_size * 1024) - 1, "complete flash"
+		) || flashrom_layout_include_region(flash->default_layout, "complete flash")
+	)
+		return -1;
 	return 0;
 }
 
@@ -1108,7 +1109,10 @@ int probe_flash(struct registered_master *mst, int startchip, struct flashctx *f
 		/* Only probe for SPI25 chips by default. */
 		if (chip->bustype == BUS_SPI && !chip_to_probe && chip->spi_cmd_set != SPI25)
 			continue;
-		msg_gdbg("Probing for %s %s, %d kB: ", chip->vendor, chip->name, chip->total_size);
+		msg_gdbg("Probing for %s %s, %d %s: ", chip->vendor, chip->name,
+			(chip->total_bytes & 1023) ? chip->total_bytes : chip->total_size,
+			(chip->total_bytes & 1023) ? "bytes" : "kB"
+		);
 		probe_func_t *probe_func = lookup_probe_func_ptr(chip);
 		if (!probe_func && !force) {
 			msg_gdbg("failed! flashrom has no probe function for this flash chip.\n");
@@ -1190,8 +1194,12 @@ notfound:
 		return -1;
 
 	tmp = flashbuses_to_text(flash->chip->bustype);
-	msg_cinfo("%s %s flash chip \"%s\" (%d kB, %s) ", force ? "Assuming" : "Found",
-		  flash->chip->vendor, flash->chip->name, flash->chip->total_size, tmp ? tmp : "?");
+	msg_cinfo("%s %s flash chip \"%s\" (%d %s, %s) ", force ? "Assuming" : "Found",
+		flash->chip->vendor, flash->chip->name,
+		(flash->chip->total_bytes & 1023) ? flash->chip->total_bytes : flash->chip->total_size,
+		(flash->chip->total_bytes & 1023) ? "bytes" : "kB",
+		tmp ? tmp : "?"
+	);
 	free(tmp);
 	if (master_uses_physmap(mst))
 		msg_cinfo("mapped at physical address 0x%0*" PRIxPTR ".\n",
@@ -2189,7 +2197,7 @@ int flashrom_flash_erase(struct flashctx *const flashctx)
 
 int flashrom_image_read(struct flashctx *const flashctx, void *const buffer, const size_t buffer_len)
 {
-	const size_t flash_size = flashctx->chip->total_size * 1024;
+	const size_t flash_size = flashctx->chip->total_bytes ? flashctx->chip->total_bytes : flashctx->chip->total_size * 1024;
 
 	if (flash_size > buffer_len)
 		return 2;
@@ -2365,13 +2373,13 @@ _free_ret:
 int flashrom_image_verify(struct flashctx *const flashctx, const void *const buffer, const size_t buffer_len)
 {
 	const struct flashrom_layout *const layout = get_layout(flashctx);
-	const size_t flash_size = flashctx->chip->total_size * 1024;
+	const size_t flash_size = flashctx->chip->total_bytes ? flashctx->chip->total_bytes : flashctx->chip->total_size * 1024;
 
 	if (buffer_len != flash_size)
 		return 2;
 
 	const uint8_t *const newcontents = buffer;
-	uint8_t *const curcontents = malloc(flash_size);
+	uint8_t *const curcontents = malloc((flash_size + 1023) & ~1023);
 	if (!curcontents) {
 		msg_gerr("Out of memory!\n");
 		return 1;

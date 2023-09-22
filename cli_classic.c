@@ -478,7 +478,7 @@ static int do_read(struct flashctx *const flash, const char *const filename)
 	int ret;
 
 	unsigned long size = flashrom_flash_getsize(flash);
-	unsigned char *buf = calloc(size, sizeof(unsigned char));
+	unsigned char *buf = calloc((size + 1023) & ~1023, sizeof(unsigned char));
 	if (!buf) {
 		msg_gerr("Memory allocation failed!\n");
 		return 1;
@@ -511,8 +511,8 @@ static int do_write(struct flashctx *const flash, const char *const filename, co
 	const size_t flash_size = flashrom_flash_getsize(flash);
 	int ret = 1;
 
-	uint8_t *const newcontents = malloc(flash_size);
-	uint8_t *const refcontents = referencefile ? malloc(flash_size) : NULL;
+	uint8_t *const newcontents = malloc((flash_size + 1023) & ~1023);
+	uint8_t *const refcontents = referencefile ? malloc((flash_size + 1023) & ~1023) : NULL;
 
 	if (!newcontents || (referencefile && !refcontents)) {
 		msg_gerr("Out of memory!\n");
@@ -547,7 +547,7 @@ static int do_verify(struct flashctx *const flash, const char *const filename)
 	const size_t flash_size = flashrom_flash_getsize(flash);
 	int ret = 1;
 
-	uint8_t *const newcontents = malloc(flash_size);
+	uint8_t *const newcontents = malloc((flash_size + 1023) & ~1023);
 	if (!newcontents) {
 		msg_gerr("Out of memory!\n");
 		goto _free_ret;
@@ -1087,9 +1087,11 @@ int main(int argc, char *argv[])
 	} else if (!options.chip_to_probe) {
 		/* repeat for convenience when looking at foreign logs */
 		tempstr = flashbuses_to_text(flashes[0].chip->bustype);
-		msg_gdbg("Found %s flash chip \"%s\" (%d kB, %s).\n",
-			 flashes[0].chip->vendor, flashes[0].chip->name, flashes[0].chip->total_size,
-			 tempstr ? tempstr : "?");
+		msg_gdbg("Found %s flash chip \"%s\" (%d %s, %s).\n",
+			flashes[0].chip->vendor, flashes[0].chip->name,
+			(flashes[0].chip->total_bytes & 1023) ? flashes[0].chip->total_bytes : flashes[0].chip->total_size,
+			(flashes[0].chip->total_bytes & 1023) ? "bytes" : "kB",
+			tempstr ? tempstr : "?");
 		free(tempstr);
 	}
 

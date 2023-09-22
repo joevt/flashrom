@@ -23,27 +23,30 @@
 
 struct pci_access *pacc;
 
-enum pci_bartype {
-	TYPE_MEMBAR,
-	TYPE_IOBAR,
-	TYPE_ROMBAR,
-	TYPE_UNKNOWN
-};
-
-uintptr_t pcidev_readbar(struct pci_dev *dev, int bar)
+uintptr_t pcidev_readbar_2(
+	struct pci_dev *dev, int bar,
+	bool enable_bar, bool get_size_unsafe,
+	pci_bartype *pbartype, uint64_t *pbarsize,
+	uint16_t *psupported_cycles_before, uint16_t *psupported_cycles_after,
+	uint32_t *pbar_addr_before, uint32_t *pbar_addr_after
+)
 {
-	uint64_t addr;
-	uint32_t upperaddr;
-	uint8_t headertype;
-	uint16_t supported_cycles;
-	enum pci_bartype bartype = TYPE_UNKNOWN;
+	pci_bartype bartype = TYPE_UNKNOWN;
+	uint64_t barsize = 0;
 
+	uint16_t supported_cycles = pci_read_word(dev, PCI_COMMAND);
+	if (psupported_cycles_before) *psupported_cycles_before = supported_cycles;
+	if (psupported_cycles_after) *psupported_cycles_after = supported_cycles;
 
-	headertype = pci_read_byte(dev, PCI_HEADER_TYPE) & 0x7f;
+	uint8_t headertype = pci_read_byte(dev, PCI_HEADER_TYPE) & 0x7f;
 	msg_pspew("PCI header type 0x%02x\n", headertype);
 
 	/* Don't use dev->base_addr[x] (as value for 'bar'), won't work on older libpci. */
-	addr = pci_read_long(dev, bar);
+	uint32_t upperaddr = 0;
+	uint32_t loweraddr = pci_read_long(dev, bar);
+	if (pbar_addr_before) *pbar_addr_before = loweraddr;
+	if (pbar_addr_after) *pbar_addr_after = loweraddr;
+	uint64_t fulladdr = loweraddr;
 
 	/* Sanity checks. */
 	switch (headertype) {
@@ -55,7 +58,7 @@ uintptr_t pcidev_readbar(struct pci_dev *dev, int bar)
 		case PCI_BASE_ADDRESS_3:
 		case PCI_BASE_ADDRESS_4:
 		case PCI_BASE_ADDRESS_5:
-			if ((addr & PCI_BASE_ADDRESS_SPACE) == PCI_BASE_ADDRESS_SPACE_IO)
+			if ((loweraddr & PCI_BASE_ADDRESS_SPACE) == PCI_BASE_ADDRESS_SPACE_IO)
 				bartype = TYPE_IOBAR;
 			else
 				bartype = TYPE_MEMBAR;
@@ -69,7 +72,7 @@ uintptr_t pcidev_readbar(struct pci_dev *dev, int bar)
 		switch (bar) {
 		case PCI_BASE_ADDRESS_0:
 		case PCI_BASE_ADDRESS_1:
-			if ((addr & PCI_BASE_ADDRESS_SPACE) == PCI_BASE_ADDRESS_SPACE_IO)
+			if ((loweraddr & PCI_BASE_ADDRESS_SPACE) == PCI_BASE_ADDRESS_SPACE_IO)
 				bartype = TYPE_IOBAR;
 			else
 				bartype = TYPE_MEMBAR;
@@ -87,20 +90,13 @@ uintptr_t pcidev_readbar(struct pci_dev *dev, int bar)
 		break;
 	}
 
-	supported_cycles = pci_read_word(dev, PCI_COMMAND);
-
 	msg_pdbg("Requested BAR 0x%02x is of type ", bar);
 	switch (bartype) {
 	case TYPE_MEMBAR:
-		msg_pdbg("MEM");
-		if (!(supported_cycles & PCI_COMMAND_MEMORY)) {
-			msg_perr("MEM BAR access requested, but device has MEM space accesses disabled.\n");
-			/* TODO: Abort here? */
-		}
-		msg_pdbg(", %sbit, %sprefetchable\n",
-			 ((addr & 0x6) == 0x0) ? "32" : (((addr & 0x6) == 0x4) ? "64" : "reserved"),
-			 (addr & 0x8) ? "" : "not ");
-		if ((addr & 0x6) == 0x4) {
+		msg_pdbg("MEM, %sbit, %sprefetchable\n",
+			 ((loweraddr & 0x6) == 0x0) ? "32" : (((loweraddr & 0x6) == 0x4) ? "64" : "reserved"),
+			 (loweraddr & 0x8) ? "" : "not ");
+		if ((loweraddr & 0x6) == 0x4) {
 			/* The spec says that a 64-bit register consumes
 			 * two subsequent dword locations.
 			 */
@@ -109,43 +105,118 @@ uintptr_t pcidev_readbar(struct pci_dev *dev, int bar)
 				/* Fun! A real 64-bit resource. */
 				if (sizeof(uintptr_t) != sizeof(uint64_t)) {
 					msg_perr("BAR unreachable!");
-					/* TODO: Really abort here? If multiple PCI devices match,
-					 * we might never tell the user about the other devices.
-					 */
-					return 0;
+					fulladdr = 0;
+					break;
 				}
-				addr |= (uint64_t)upperaddr << 32;
+				fulladdr |= (uint64_t)upperaddr << 32;
 			}
 		}
-		addr &= PCI_BASE_ADDRESS_MEM_MASK;
+		fulladdr &= PCI_BASE_ADDRESS_MEM_MASK;
+
+		if (!(supported_cycles & PCI_COMMAND_MEMORY) || get_size_unsafe) {
+			pci_write_long(dev, bar, 0xffffffff & PCI_BASE_ADDRESS_MEM_MASK);
+			uint32_t lowersize = pci_read_long(dev, bar);
+			pci_write_long(dev, bar, loweraddr);
+			barsize = lowersize & PCI_BASE_ADDRESS_MEM_MASK;
+			if ((loweraddr & 0x6) == 0x4) {
+				pci_write_long(dev, bar+4, 0xffffffff);
+				uint32_t uppersize = pci_read_long(dev, bar);
+				pci_write_long(dev, bar+4, upperaddr);
+				barsize |= (uint64_t)uppersize << 32;
+			}
+		}
+
+		if (!(supported_cycles & PCI_COMMAND_MEMORY)) {
+			if (enable_bar) {
+				pci_write_long(dev, PCI_COMMAND, supported_cycles | PCI_COMMAND_MEMORY);
+				if (psupported_cycles_after) *psupported_cycles_after = supported_cycles | PCI_COMMAND_MEMORY;
+			}
+			else {
+				msg_perr("MEM BAR access requested, but device has MEM space accesses disabled.\n");
+				/* TODO: Abort here? */
+			}
+		}
 		break;
 	case TYPE_IOBAR:
 		msg_pdbg("I/O\n");
+		fulladdr &= PCI_BASE_ADDRESS_IO_MASK;
 #if __FLASHROM_HAVE_OUTB__
+		if (!(supported_cycles & PCI_COMMAND_IO) || get_size_unsafe) {
+			pci_write_long(dev, bar, 0xffffffff & PCI_BASE_ADDRESS_IO_MASK);
+			uint32_t lowersize = pci_read_long(dev, bar);
+			pci_write_long(dev, bar, loweraddr);
+			barsize = lowersize & PCI_BASE_ADDRESS_IO_MASK;
+		}
+
 		if (!(supported_cycles & PCI_COMMAND_IO)) {
-			msg_perr("I/O BAR access requested, but device has I/O space accesses disabled.\n");
-			/* TODO: Abort here? */
+			if (enable_bar) {
+				pci_write_long(dev, PCI_COMMAND, supported_cycles | PCI_COMMAND_IO);
+				if (psupported_cycles_after) *psupported_cycles_after = supported_cycles | PCI_COMMAND_IO;
+			}
+			else {
+				msg_perr("I/O BAR access requested, but device has I/O space accesses disabled.\n");
+				/* TODO: Abort here? */
+			}
 		}
 #else
-		msg_perr("I/O BAR access requested, but flashrom does not support I/O BAR access on this "
-			 "platform (yet).\n");
+		msg_perr("I/O BAR access requested, but flashrom does not support I/O BAR access on this platform (yet).\n");
 #endif
-		addr &= PCI_BASE_ADDRESS_IO_MASK;
 		break;
 	case TYPE_ROMBAR:
 		msg_pdbg("ROM\n");
-		/* Not sure if this check is needed. */
-		if (!(supported_cycles & PCI_COMMAND_MEMORY)) {
-			msg_perr("MEM BAR access requested, but device has MEM space accesses disabled.\n");
-			/* TODO: Abort here? */
+		fulladdr &= PCI_ROM_ADDRESS_MASK;
+
+		if (!(supported_cycles & PCI_COMMAND_MEMORY) || !(loweraddr & PCI_ROM_ADDRESS_ENABLE) || get_size_unsafe) {
+			pci_write_long(dev, bar, 0xffffffff & PCI_ROM_ADDRESS_MASK);
+			uint32_t lowersize = pci_read_long(dev, bar);
+			pci_write_long(dev, bar, loweraddr);
+			barsize = lowersize & PCI_ROM_ADDRESS_MASK;
 		}
-		addr &= PCI_ROM_ADDRESS_MASK;
+
+		if (!(supported_cycles & PCI_COMMAND_MEMORY)) {
+			if (enable_bar) {
+				pci_write_long(dev, PCI_COMMAND, supported_cycles | PCI_COMMAND_MEMORY);
+				if (psupported_cycles_after) *psupported_cycles_after = supported_cycles | PCI_COMMAND_MEMORY;
+			}
+			else {
+				msg_perr("ROM BAR access requested, but device has MEM space accesses disabled.\n");
+				/* TODO: Abort here? */
+			}
+		}
+		if (!(loweraddr & PCI_ROM_ADDRESS_ENABLE)) {
+			if (enable_bar) {
+				pci_write_long(dev, bar, loweraddr | PCI_ROM_ADDRESS_ENABLE);
+				if (pbar_addr_after) *pbar_addr_after = loweraddr | PCI_ROM_ADDRESS_ENABLE;
+			}
+			else {
+				msg_perr("ROM BAR access requested, but ROM access is disabled.\n");
+				/* TODO: Abort here? */
+			}
+		}
 		break;
 	case TYPE_UNKNOWN:
 		msg_perr("BAR type unknown, please report a bug at flashrom@flashrom.org\n");
 	}
 
-	return (uintptr_t)addr;
+	if (barsize) {
+		int i;
+		for (i = 63; i >= 0 && !(barsize & (1ULL << i)); i--)
+			barsize |= (1ULL << i);
+		barsize = -barsize;
+		msg_pdbg("%d bit BAR has size %lld %s\n", i + 1,
+			(barsize & 1023) ? barsize : barsize / 1024,
+			(barsize & 1023) ? "bytes" : "kB"
+		);
+	}
+
+	if (pbartype) *pbartype = bartype;
+	if (pbarsize) *pbarsize = barsize;
+	return (uintptr_t)fulladdr;
+}
+
+uintptr_t pcidev_readbar(struct pci_dev *dev, int bar)
+{
+	return pcidev_readbar_2(dev, bar, false, false, NULL, NULL, NULL, NULL, NULL, NULL);
 }
 
 struct pci_dev *pcidev_scandev(struct pci_filter *filter, struct pci_dev *start)

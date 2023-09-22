@@ -124,8 +124,23 @@ struct pci_filter;
 
 /* pcidev.c */
 // FIXME: This needs to be local, not global(?)
+
+typedef enum {
+	TYPE_MEMBAR,
+	TYPE_IOBAR,
+	TYPE_ROMBAR,
+	TYPE_UNKNOWN
+} pci_bartype;
+
 extern struct pci_access *pacc;
 int pci_init_common(void);
+uintptr_t pcidev_readbar_2(
+	struct pci_dev *dev, int bar,
+	bool enable_bar, bool get_size_unsafe,
+	pci_bartype *pbartype, uint64_t *pbarsize,
+	uint16_t *psupported_cycles_before, uint16_t *psupported_cycles_after,
+	uint32_t *pbar_addr_before, uint32_t *pbar_addr_after
+);
 uintptr_t pcidev_readbar(struct pci_dev *dev, int bar);
 struct pci_dev *pcidev_init(const struct programmer_cfg *cfg, const struct dev_entry *devs, int bar);
 struct pci_dev *pcidev_scandev(struct pci_filter *filter, struct pci_dev *start);

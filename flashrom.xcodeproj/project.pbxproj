@@ -96,6 +96,7 @@
 		6368FDB229AE61E7003FFB41 /* hwaccess_physmap.c in Sources */ = {isa = PBXBuildFile; fileRef = 6368FBFF29AE54F1003FFB41 /* hwaccess_physmap.c */; };
 		6368FDDF29AE6380003FFB41 /* endian_big.c in Sources */ = {isa = PBXBuildFile; fileRef = 6368FDDC29AE6380003FFB41 /* endian_big.c */; };
 		6368FDE129AE6380003FFB41 /* memaccess.c in Sources */ = {isa = PBXBuildFile; fileRef = 6368FDDE29AE6380003FFB41 /* memaccess.c */; };
+		63F4C6D52ABAECF400186BC8 /* anypci.c in Sources */ = {isa = PBXBuildFile; fileRef = 63F4C6D42ABAECF400186BC8 /* anypci.c */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -224,6 +225,7 @@
 		6368FDDC29AE6380003FFB41 /* endian_big.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = endian_big.c; path = platform/endian_big.c; sourceTree = "<group>"; };
 		6368FDDD29AE6380003FFB41 /* endian_little.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = endian_little.c; path = platform/endian_little.c; sourceTree = "<group>"; };
 		6368FDDE29AE6380003FFB41 /* memaccess.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = memaccess.c; path = platform/memaccess.c; sourceTree = "<group>"; };
+		63F4C6D42ABAECF400186BC8 /* anypci.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = anypci.c; sourceTree = "<group>"; };
 		8DD76FB20486AB0100D96B5E /* flashrom */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = flashrom; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
@@ -363,6 +365,7 @@
 				6368FC1229AE54F1003FFB41 /* 82802ab.c */,
 				6368FC1329AE54F1003FFB41 /* helpers.c */,
 				6368FC1429AE54F1003FFB41 /* atapromise.c */,
+				63F4C6D42ABAECF400186BC8 /* anypci.c */,
 			);
 			name = Source;
 			sourceTree = "<group>";
@@ -432,9 +435,15 @@
 /* Begin PBXProject section */
 		08FB7793FE84155DC02AAC07 /* Project object */ = {
 			isa = PBXProject;
+			attributes = {
+			};
 			buildConfigurationList = 1DEB928908733DD80010E9CD /* Build configuration list for PBXProject "flashrom" */;
 			compatibilityVersion = "Xcode 3.1";
+			developmentRegion = en;
 			hasScannedForEncodings = 1;
+			knownRegions = (
+				en,
+			);
 			mainGroup = 08FB7794FE84155DC02AAC07 /* flashrom */;
 			projectDirPath = "";
 			projectRoot = "";
@@ -449,6 +458,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				63F4C6D52ABAECF400186BC8 /* anypci.c in Sources */,
 				6368FC1529AE54F1003FFB41 /* libflashrom.c in Sources */,
 				6368FC1629AE54F1003FFB41 /* flashrom.c in Sources */,
 				6368FC1729AE54F1003FFB41 /* fmap.c in Sources */,

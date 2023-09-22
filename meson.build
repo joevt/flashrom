@@ -507,6 +507,13 @@ programmer = {
     'srcs'    : files('satasii.c', 'pcidev.c'),
     'flags'   : [ '-DCONFIG_SATASII=1' ],
   },
+  'anypci' : {
+    'systems' : systems_hwaccess,
+    'deps'    : [ libpci ],
+    'groups'  : [ group_pci, group_internal ],
+    'srcs'    : files('anypci.c', 'pcidev.c'),
+    'flags'   : [ '-DCONFIG_ANYPCI=1' ],
+  },
   'serprog' : {
     'systems' : systems_serial,
     'groups'  : [ group_serial, group_external ],

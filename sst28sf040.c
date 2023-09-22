@@ -82,7 +82,7 @@ int write_28sf040(struct flashctx *flash, const uint8_t *src, unsigned int start
 	for (i = 0; i < len; i++) {
 		/* transfer data from source to destination */
 		if (*src == 0xFF) {
-			dst++, src++;
+			dst++; src++;
 			/* If the data is 0xFF, don't program it */
 			continue;
 		}

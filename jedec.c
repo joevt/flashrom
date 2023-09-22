@@ -381,7 +381,7 @@ int write_jedec_1(struct flashctx *flash, const uint8_t *src, unsigned int start
 	for (unsigned int i = 0; i < len; i++) {
 		if (write_byte_program_jedec_common(flash, src, dst))
 			failed = 1;
-		dst++, src++;
+        dst++; src++;
 		update_progress(flash, FLASHROM_PROGRESS_WRITE, i + 1, len);
 	}
 	if (failed)

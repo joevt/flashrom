@@ -298,6 +298,8 @@ static void print_supported_chips_wiki(int cols)
 
 	/* +1 to force the resulting number of columns to be < cols */
 	lines_per_col = chipcount / cols + ((chipcount%cols) > 0 ? 1 : 0);
+	if (lines_per_col == 0)
+		lines_per_col = 1;
 
 	printf("%s", chip_intro);
 	printf("\nTotal amount of supported chips: '''%d'''\n\n"

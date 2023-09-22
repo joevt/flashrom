@@ -408,11 +408,14 @@ int erase_write(struct flashctx *const flashctx, chipoff_t region_start, chipoff
 	}
 
 _end:
-	memcpy(newcontents + region_start, old_start_buf, old_start - region_start);
-	memcpy(newcontents + old_end, old_end_buf, region_end - old_end);
-
-	free(old_start_buf);
-	free(old_end_buf);
+	if (old_start_buf) {
+		memcpy(newcontents + region_start, old_start_buf, old_start - region_start);
+		free(old_start_buf);
+	}
+	if (old_end_buf) {
+		memcpy(newcontents + old_end, old_end_buf, region_end - old_end);
+		free(old_end_buf);
+	}
 
 	msg_cinfo("Erase/write done from %"PRIx32" to %"PRIx32"\n", region_start, region_end);
 	return ret;

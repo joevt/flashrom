@@ -17,6 +17,7 @@
 #define TESTS_H
 
 #include <fcntl.h>
+#include <include/test.h>
 
 /* helpers.c */
 void address_to_bits_test_success(void **state);
@@ -54,6 +55,10 @@ void dummy_null_prog_param_test_success(void **state);
 void dummy_all_buses_test_success(void **state);
 void nicrealtek_basic_lifecycle_test_success(void **state);
 void raiden_debug_basic_lifecycle_test_success(void **state);
+void raiden_debug_targetAP_basic_lifecycle_test_success(void **state);
+void raiden_debug_targetEC_basic_lifecycle_test_success(void **state);
+void raiden_debug_target0_basic_lifecycle_test_success(void **state);
+void raiden_debug_target1_basic_lifecycle_test_success(void **state);
 void dediprog_basic_lifecycle_test_success(void **state);
 void linux_mtd_probe_lifecycle_test_success(void **state);
 void linux_spi_probe_lifecycle_test_success(void **state);
@@ -99,5 +104,10 @@ void selfcheck_programmer_table(void **state);
 void selfcheck_flashchips_table(void **state);
 void selfcheck_eraseblocks(void **state);
 void selfcheck_board_matches_table(void **state);
+
+/* erase_func_algo.c */
+struct CMUnitTest *get_erase_func_algo_tests(size_t *num_tests);
+void erase_function_algo_test_success(void **state);
+void write_function_algo_test_success(void **state);
 
 #endif /* TESTS_H */

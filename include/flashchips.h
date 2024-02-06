@@ -390,7 +390,7 @@
 #define GIGADEVICE_GD25Q16	0x4015	/* Same as GD25Q16B (which has OTP) */
 #define GIGADEVICE_GD25Q32	0x4016	/* Same as GD25Q32B */
 #define GIGADEVICE_GD25Q64	0x4017	/* Same as GD25Q64B */
-#define GIGADEVICE_GD25Q128	0x4018	/* GD25Q128B and GD25Q128C only, can be distinguished by SFDP */
+#define GIGADEVICE_GD25Q128	0x4018	/* Same as GD25Q128B, GD25Q127C, GD25Q128C, and GD25Q128E, can be distinguished by SFDP */
 #define GIGADEVICE_GD25Q256D	0x4019
 #define GIGADEVICE_GD25VQ21B	0x4212
 #define GIGADEVICE_GD25VQ41B	0x4213  /* Same as GD25VQ40C, can be distinguished by SFDP */
@@ -402,6 +402,7 @@
 #define GIGADEVICE_GD25LQ32	0x6016
 #define GIGADEVICE_GD25LQ64	0x6017	/* Same as GD25LQ64B (which is faster) */
 #define GIGADEVICE_GD25LQ128CD	0x6018
+#define GIGADEVICE_GD25LQ255E	0x6019
 #define GIGADEVICE_GD25WQ80E	0x6514
 #define GIGADEVICE_GD29GL064CAB	0x7E0601
 
@@ -635,6 +636,11 @@
 #define PMC_PM49FL002		0x6D
 #define PMC_PM49FL004		0x6E
 
+#define PUYA_ID			0x85
+#define PUYA_P25Q06H		0x4010
+#define PUYA_P25Q11H		0x4011
+#define PUYA_P25Q21H		0x4012
+
 /*
  * The Sanyo chip found so far uses SPI, first byte is manufacturer code,
  * second byte is the device code,
@@ -828,7 +834,7 @@
 #define ST_M45PE10		0x4011
 #define ST_M45PE20		0x4012
 #define ST_M45PE40		0x4013
-#define ST_M45PE80		0x4014
+#define ST_M45PE80		0x4014	/* Same as XM25QH80B */
 #define ST_M45PE16		0x4015
 #define XMC_XM25QH64C		0x4017
 #define XMC_XM25QU64C		0x4117

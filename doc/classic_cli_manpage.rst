@@ -773,6 +773,14 @@ where ``state`` can be ``on`` or ``off``.
 More information about the Bus Pirate pull-up resistors and their purpose is available
 `in a guide by dangerousprototypes <http://dangerousprototypes.com/docs/Practical_guide_to_Bus_Pirate_pull-up_resistors>`_.
 
+When working with low-voltage chips, the internal 10k pull-ups of the Bus Pirate might be too high. In such cases, it's necessary to create an external pull-up using lower-value resistors.
+
+For this, you can use the ``hiz`` parameter. This way, the Bus Pirate will operate as an open drain. Syntax is::
+
+        flashrom -p buspirate_spi:hiz=state
+
+where ``state`` can be ``on`` or ``off``.
+
 The state of the Bus Pirate power supply pins is controllable through an optional ``psus`` parameter. Syntax is::
 
         flashrom -p buspirate_spi:psus=state
@@ -866,11 +874,15 @@ The schematic of the Xilinx DLC 5 was published in `a Xilinx guide <http://www.x
 raiden_debug_spi programmer
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-The target of the SPI flashing mux must be specified with the ``target`` parameter with the::
+Some devices such as the GSC knows how it is wired to AP and EC flash chips, and can be told which specific device to talk to using the ``target`` parameter::
 
-        flashrom -p raiden_debug_spi:target=chip
+        flashrom -p raiden_debug_spi:target={ap,ec}
 
-syntax, where ``chip`` is either the ``ap`` or ``ec`` to flash, otherwise a unspecified target terminates at the end-point.
+Other devices such as Servo Micro and HyperDebug are generic, and do not know how they are wired, the caller is responsible for first configure the appropriate MUXes or buffers, and then tell the debugger which port to use (Servo Micro has just one SPI port, HyperDebug is the first of this kind to have multiple)::
+
+        flashrom -p raiden_debug_spi:target=N
+
+where ``N`` is an non-negative integer (default ``0``).
 
 The default is to use the first available servo. You can use the optional ``serial`` parameter to specify the servo
 USB device serial number to use specifically with::

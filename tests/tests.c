@@ -463,6 +463,10 @@ int main(int argc, char *argv[])
 		cmocka_unit_test(dummy_all_buses_test_success),
 		cmocka_unit_test(nicrealtek_basic_lifecycle_test_success),
 		cmocka_unit_test(raiden_debug_basic_lifecycle_test_success),
+		cmocka_unit_test(raiden_debug_targetAP_basic_lifecycle_test_success),
+		cmocka_unit_test(raiden_debug_targetEC_basic_lifecycle_test_success),
+		cmocka_unit_test(raiden_debug_target0_basic_lifecycle_test_success),
+		cmocka_unit_test(raiden_debug_target1_basic_lifecycle_test_success),
 		cmocka_unit_test(dediprog_basic_lifecycle_test_success),
 		cmocka_unit_test(linux_mtd_probe_lifecycle_test_success),
 		cmocka_unit_test(linux_spi_probe_lifecycle_test_success),
@@ -500,6 +504,12 @@ int main(int argc, char *argv[])
 	};
 	ret |= cmocka_run_group_tests_name("chip.c tests", chip_tests, NULL, NULL);
 
+	size_t n_erase_tests;
+	struct CMUnitTest *erase_func_algo_tests = get_erase_func_algo_tests(&n_erase_tests);
+	ret |= _cmocka_run_group_tests("erase_func_algo.c tests", erase_func_algo_tests, n_erase_tests, NULL, NULL);
+	free(erase_func_algo_tests);
+
+	// Write-protect group should run last.
 	const struct CMUnitTest chip_wp_tests[] = {
 		cmocka_unit_test(invalid_wp_range_dummyflasher_test_success),
 		cmocka_unit_test(set_wp_range_dummyflasher_test_success),

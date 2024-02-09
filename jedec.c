@@ -378,7 +378,8 @@ int write_jedec_1(struct flashctx *flash, const uint8_t *src, unsigned int start
 	chipaddr dst = flash->virtual_memory + start;
 	const chipaddr olddst = dst;
 
-	for (unsigned int i = 0; i < len; i++) {
+	unsigned int i;
+	for (i = 0; i < len; i++) {
 		if (write_byte_program_jedec_common(flash, src, dst))
 			failed = 1;
         dst++; src++;
@@ -404,7 +405,8 @@ static int jedec_write_page(struct flashctx *flash, const uint8_t *src,
 		start_program_jedec_common(flash);
 
 		/* transfer data from source to destination */
-		for (unsigned int i = 0; i < page_size; i++) {
+		unsigned int i;
+		for (i = 0; i < page_size; i++) {
 			/* If the data is 0xFF, don't program it */
 			if (*src != 0xFF)
 				chip_writeb(flash, *src, dst);
@@ -458,7 +460,8 @@ int write_jedec(struct flashctx *flash, const uint8_t *buf, unsigned int start,
 	 * (start + len - 1) / page_size. Since we want to include that last
 	 * page as well, the loop condition uses <=.
 	 */
-	for (unsigned int i = start / page_size; i <= nwrites; i++) {
+	unsigned int i;
+	for (i = start / page_size; i <= nwrites; i++) {
 		/* Byte position of the first byte in the range in this page. */
 		/* starthere is an offset to the base address of the chip. */
 		starthere = max(start, i * page_size);

@@ -948,7 +948,8 @@ char *flashbuses_to_text(enum chipbustype bustype)
 	if (!ret)
 		return NULL;
 
-	for (unsigned int i = 0; i < ARRAY_SIZE(bustypes); i++)
+	unsigned int i;
+	for (i = 0; i < ARRAY_SIZE(bustypes); i++)
 	{
 		if (bustype & bustypes[i].type) {
 			ptr = strcat_realloc(ret, bustypes[i].name);

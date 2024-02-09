@@ -196,7 +196,8 @@ error:
 
 static char *sanitise_filename(char *filename)
 {
-	for (unsigned i = 0; filename[i]; i++) {
+	unsigned i;
+	for (i = 0; filename[i]; i++) {
 		if (isspace((unsigned char)filename[i]))
 			filename[i] = '_';
 	}

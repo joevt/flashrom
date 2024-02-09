@@ -76,7 +76,8 @@ static int asm106x_command(const struct flashctx *flash,
 		const unsigned int chunk = min(writecnt, 4);
 		uint32_t val = 0;
 
-		for (int k = chunk-1; k >= 0; k--)
+		int k;
+		for (k = chunk-1; k >= 0; k--)
 			val = (val << 8) | writearr[k];
 		msg_pdbg2("asm106x write %#08"PRIx32" chunk %u\n", val, chunk);
 		pci_write_long(data->pci, ASM106X_REG_DATA, val);
@@ -97,7 +98,8 @@ static int asm106x_command(const struct flashctx *flash,
 
 		uint32_t val = pci_read_long(data->pci, ASM106X_REG_DATA);
 		msg_pdbg2("asm106x read %#08"PRIx32" chunk %u\n", val, chunk);
-		for (unsigned int k = 0; k < chunk; k++) {
+		unsigned int k;
+		for (k = 0; k < chunk; k++) {
 			readarr[k] = val & 0xff;
 			val >>= 8;
 		}

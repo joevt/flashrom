@@ -863,14 +863,16 @@ int main(int argc, char *argv[])
 {
 	const struct flashchip *chip = NULL;
 	/* Probe for up to eight flash chips. */
-	struct flashctx flashes[8] = {{0}};
+	struct flashctx flashes[8];
+	bzero(flashes, sizeof(flashes));
 	struct flashctx *fill_flash;
 	char *tempstr = NULL;
 	int startchip = -1, chipcount = 0;
 	int i, j;
 	int ret = 0;
 
-	struct cli_options options = { 0 };
+	struct cli_options options;
+	bzero(&options, sizeof(options));
 	static const char optstring[] = "r:Rw:v:nNVEfgc:l:i:p:Lzho:x";
 	static const struct option long_options[] = {
 		{"read",		1, NULL, 'r'},

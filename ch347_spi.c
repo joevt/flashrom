@@ -53,7 +53,7 @@ struct ch347_spi_data {
 /* TODO: Add support for HID mode */
 static const struct dev_entry devs_ch347_spi[] = {
 	{0x1A86, 0x55DB, OK, "QinHeng Electronics", "USB To UART+SPI+I2C"},
-	{0}
+	{0, 0, 0, 0, 0}
 };
 
 static int ch347_spi_shutdown(void *data)

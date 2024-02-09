@@ -34,7 +34,7 @@ struct asm106x_data {
 static const struct dev_entry asm106x_devs[] = {
 	{PCI_VENDOR_ID_ASMEDIA, 0x0612, OK, "ASMedia", "ASM106x"},
 
-	{0},
+	{0, 0, 0, 0, 0},
 };
 
 static int asm106x_wait_ready(struct pci_dev *pci, uint8_t *pval)

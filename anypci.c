@@ -1,7 +1,7 @@
 /*
  * This file is part of the flashrom project.
  *
- * Copyright (C) 2009 Rudolf Marek <r.marek@assembler.cz>
+ * Copyright (C) 2023-2024 Joe van Tunen <joevt@shaw.ca>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -14,7 +14,9 @@
  * GNU General Public License for more details.
  */
 
-/* Datasheets can be found on http://www.siliconimage.com. Great thanks! */
+/*
+ * Read config, ROM, or BAR of any PCI device.
+ */
 
 #include <stdlib.h>
 #include <strings.h>
@@ -76,10 +78,12 @@ static int anypci_read(struct flashctx *flash, uint8_t *buf, unsigned int start,
 				*(uint32_t*)buf = cpu_to_le32(pci_mmio_readl(data->virt_addr + start));
 		}
 		else if (data->bartype == TYPE_IOBAR) {
+#if __FLASHROM_HAVE_OUTB__
 			if (data->width == 1)
 				*(uint8_t*)buf = INB(data->phys_addr + start);
 			else if (data->width == 4)
 				*(uint32_t*)buf = cpu_to_le32(INL(data->phys_addr + start));
+#endif
 		}
 		start += data->width;
 		len -= data->width;
@@ -232,10 +236,16 @@ static int anypci_init(const struct programmer_cfg *cfg)
 			}
 		}
 		else if (bartype == TYPE_IOBAR) {
+#if __FLASHROM_HAVE_OUTB__
 			if (rget_io_perms()) {
 				anypci_shutdown(data);
 				return 1;
 			}
+#else
+			msg_perr("I/O BAR access requested, but flashrom does not support I/O BAR access on this platform (yet).\n");
+			anypci_shutdown(data);
+			return 1;
+#endif
 		}
 	}
 

@@ -623,8 +623,8 @@ Example::
         write-protected (on real hardware the pin is usually negated, but not here).
 
 
-nic3com, nicrealtek, nicnatsemi, nicintel, nicintel_eeprom, nicintel_spi, gfxnvidia, ogp_spi, drkaiser, satasii, satamv, atahpt, atavia, atapromise, it8212, anypci programmers
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+nic3com, nicrealtek, nicnatsemi, nicintel, nicintel_eeprom, nicintel_spi, gfxnvidia, ogp_spi, drkaiser, satasii, satamv, atahpt, atavia, atapromise, it8212
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 These programmers have an option to specify the PCI address of the card your want to use, which must be specified if
 more than one card supported by the selected programmer is installed in your system. The syntax is::
@@ -635,6 +635,25 @@ where ``xxxx`` is the name of the programmer, ``bb`` is the PCI bus number, ``dd
 is the PCI function number of the desired device. Example::
 
         flashrom -p nic3com:pci=05:04.0
+
+
+anypci programmer
+^^^^^^^^^^^^^^^^^
+
+This programmer reads bytes from a PCI device's BAR or from its config space. The BAR can bo I/O, MEM, or ROM.
+Example::
+
+		flashrom -p anypci:pci=segm:bb:dd.f,bar=0x30,offset=0x0,size=0x10000
+
+where ``segm`` is the PCI segment, ``bar`` is the BAR, ``offset`` is the offset into the BAR, ``size`` is the number
+of bytes to read from the BAR. Values may be entered as octal, decimal, or hexadecimal.
+
+* ``segm:`` may be omitted if the PCI device connects to the first PCI host controller or there is only one PCI host
+controller.
+* ``bar`` may be omitted if you wish to read from the ROM BAR (0x30 or 0x38 depending on the PCI header type) of the
+* PCI device. Use ``0`` to read from the PCI device's config space which is up to 4K in size.
+* ``offset`` may be omitted if you wish to read from the start of the BAR.
+* ``size`` may be omitted if you wish to read to the end of the BAR.
 
 
 atavia programmer
@@ -1272,10 +1291,16 @@ REQUIREMENTS
 
         * needs access to the respective USB device via libusb API version 1.0
 
-* satasii, nicintel, nicintel_eeprom, nicintel_spi, anypci
+* satasii, nicintel, nicintel_eeprom, nicintel_spi
 
         * need PCI configuration space read access
         * raw memory access
+
+* anypci
+
+        * need PCI configuration space read access
+        * raw memory access (only for memory and ROM BARs)
+        * raw I/O port access (only for I/O BARs)
 
 * satamv, atapromise
 

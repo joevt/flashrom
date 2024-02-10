@@ -433,7 +433,7 @@ CONFIG_GFXNVIDIA ?= yes
 # Always enable SiI SATA controllers for now.
 CONFIG_SATASII ?= yes
 
-# Always enable AnyPCI controller for now.
+# Always enable anypci reader for now.
 CONFIG_ANYPCI ?= yes
 
 # ASMedia ASM106x

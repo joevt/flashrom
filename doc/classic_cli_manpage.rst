@@ -307,6 +307,7 @@ All operations involving any chip access (probe/read/write/...) require the ``-p
         * ``dirtyjtag_spi``       (for SPI flash ROMs attached to DirtyJTAG-compatible devices)
         * ``asm106x``             (for SPI flash ROMs attached to asm106x PCI SATA controllers)
         * ``anypci``              (for PCI MEM, I/O, or ROM BAR or PCI config space)
+        * ``anymem``              (for physical memory range)
 
         Some programmers have optional or mandatory parameters which are described in detail in the
         **PROGRAMMER-SPECIFIC INFORMATION** section. Support for some programmers can be disabled at compile time.
@@ -654,6 +655,19 @@ controller.
 * PCI device. Use ``0`` to read from the PCI device's config space which is up to 4K in size.
 * ``offset`` may be omitted if you wish to read from the start of the BAR.
 * ``size`` may be omitted if you wish to read to the end of the BAR.
+
+
+anymem programmer
+^^^^^^^^^^^^^^^^^
+
+This programmer is only for reading from a physical memory range such as the memory mapped ROM of a Power Macintosh.
+Example for New World Mac::
+
+        flashrom -p anymem:address=0xfff00000,size=0x100000
+
+Example for Old World Mac::
+
+        flashrom -p anymem:address=0xffc00000,size=0x400000
 
 
 atavia programmer
@@ -1302,6 +1316,10 @@ REQUIREMENTS
         * raw memory access (only for memory and ROM BARs)
         * raw I/O port access (only for I/O BARs)
 
+* anymem
+
+        * raw memory access
+
 * satamv, atapromise
 
         * need PCI configuration space read access
@@ -1332,6 +1350,10 @@ REQUIREMENTS
 
         * have to be run as superuser/root
         * need raw access permission
+
+* anymem
+
+        * has to be run as superuser/root
 
 * serprog, buspirate_spi, dediprog, usbblaster_spi, ft2232_spi, pickit2_spi, ch341a_spi, digilent_spi, dirtyjtag_spi
 

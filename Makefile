@@ -126,6 +126,7 @@ DEPENDS_ON_RAW_MEM_ACCESS := \
 	CONFIG_SATAMV \
 	CONFIG_SATASII \
 	CONFIG_ANYPCI \
+	CONFIG_ANYMEM \
 
 DEPENDS_ON_X86_MSR := \
 	CONFIG_INTERNAL_X86 \
@@ -436,6 +437,9 @@ CONFIG_SATASII ?= yes
 # Always enable anypci reader for now.
 CONFIG_ANYPCI ?= yes
 
+# Always enable anymem reader for now.
+CONFIG_ANYMEM ?= yes
+
 # ASMedia ASM106x
 CONFIG_ASM106X ?= yes
 
@@ -651,6 +655,12 @@ ifeq ($(CONFIG_ANYPCI), yes)
 FEATURE_FLAGS += -D'CONFIG_ANYPCI=1'
 PROGRAMMER_OBJS += anypci.o
 ACTIVE_PROGRAMMERS += anypci
+endif
+
+ifeq ($(CONFIG_ANYMEM), yes)
+FEATURE_FLAGS += -D'CONFIG_ANYMEM=1'
+PROGRAMMER_OBJS += anymem.o
+ACTIVE_PROGRAMMERS += anymem
 endif
 
 ifeq ($(CONFIG_ASM106X), yes)

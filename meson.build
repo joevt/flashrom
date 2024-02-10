@@ -520,6 +520,13 @@ programmer = {
     'srcs'    : files('anypci.c', 'pcidev.c'),
     'flags'   : [ '-DCONFIG_ANYPCI=1' ],
   },
+  'anymem' : {
+    'systems' : systems_hwaccess,
+    'deps'    : [ ],
+    'groups'  : [ group_internal ],
+    'srcs'    : files('anymem.c'),
+    'flags'   : [ '-DCONFIG_ANYMEM=1' ],
+  },
   'serprog' : {
     'systems' : systems_serial,
     'groups'  : [ group_serial, group_external ],

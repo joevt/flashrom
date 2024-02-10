@@ -56,6 +56,10 @@ const struct programmer_entry *const programmer_table[] = {
     &programmer_anypci,
 #endif
 
+#if CONFIG_ANYMEM == 1
+    &programmer_anymem,
+#endif
+
 #if CONFIG_ASM106X == 1
     &programmer_asm106x,
 #endif

@@ -116,7 +116,7 @@ static int anypci_shutdown(void *par_data)
 }
 
 static const struct opaque_master opaque_master_anypci = {
-	.shutdown	= anypci_shutdown,
+	.shutdown   = anypci_shutdown,
 	.probe      = anypci_probe,
 	.read       = anypci_read,
 	.write      = anypci_write,

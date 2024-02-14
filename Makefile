@@ -327,7 +327,7 @@ $(call mark_unsupported,$(DEPENDS_ON_X86_PORT_IO))
 endif
 
 # Disable the internal programmer on unsupported architectures or systems
-ifeq ($(or $(filter $(ARCH), x86), $(filter $(TARGET_OS), Linux)), )
+ifeq ($(or $(filter $(ARCH), x86), $(filter $(TARGET_OS), Linux), $(filter $(TARGET_OS), Darwin)), )
 $(call mark_unsupported,CONFIG_INTERNAL)
 endif
 

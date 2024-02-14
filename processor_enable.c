@@ -73,7 +73,7 @@ int processor_flash_enable(void)
 		flashbase = 0x1fc00000;
 		ret = 0;
 	}
-#elif defined(__i386__) || defined(__x86_64__)
+#elif defined(__i386__) || defined(__x86_64__) || defined(__ppc__) || defined(__powerpc__)
 	/* On x86, flash access is not processor specific except on
 	 * AMD Elan SC520, AMD Geode and maybe other SoC-style CPUs.
 	 * FIXME: Move enable_flash_cs5536 and get_flashbase_sc520 here.

@@ -150,7 +150,8 @@ static int internal_init(const struct programmer_cfg *cfg)
 	const char *cb_model = NULL;
 #endif
 	bool force_boardenable = false;
-	struct board_cfg bcfg = {0};
+	struct board_cfg bcfg;
+	bzero(&bcfg, sizeof(bcfg));
 
 	ret = get_params(cfg,
 			 &force_boardenable, &force_boardmismatch,
